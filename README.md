@@ -13,7 +13,7 @@ Install `bitcoind` (other coins need to be compiled from source)
 
 Set environment variables:
     
-    $ echo "export BRIDGE=/home/jack/src/babbage/bridge" >> ~/.profile
+    $ echo "export BRIDGE=/path/to/coinbridge/bridge" >> ~/.profile
     $ echo "export BITCOIN_RPC_USER=your_rpc_username" >> ~/.profile
     $ echo "export BITCOIN_RPC_PASS=your_rpc_password" >> ~/.profile
     $ echo "export BITCOIN_RPC_PORT=your_rpc_port" >> ~/.profile
@@ -47,17 +47,12 @@ Install PostgreSQL and create a user, database, and transactions table:
     $ psql -c "CREATE USER $PGUSER WITH PASSWORD '$PGPASS';"
     $ psql -c "GRANT ALL PRIVILEGES ON DATABASE '$PGDATABASE' TO $PGUSER;"
     $ logout
-    $ psql -U$PGUSER -h$PGHOST -d$PGDATABASE -c "CREATE TABLE transactions (id SERIAL PRIMARY KEY, user_id INTEGER, txhash VARCHAR(100), txdate TIMESTAMP DEFAULT transaction_timestamp(), amount DECIMAL(24,8), currency VARCHAR(25), coin_address VARCHAR(100), inbound BOOLEAN, confirmations INTEGER DEFAULT 0, last_confirmation TIMESTAMP);"
 
 Set up `pgpass` file so transaction confirmations can be autologged to postgres:
     
     $ touch ~/.pgpass
     $ echo $PGHOST:$PGPORT:$PGUSER:$PGDATABASE:$PGPASSWORD >> ~/.pgpass
     $ chmod 600 ~/.pgpass
-
-Set up the transaction table:
-    
-    $ python $BRIDGE/models.py
 
 Run `bitcoind` (and wait for the blockchain to download):
     
