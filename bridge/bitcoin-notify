@@ -1,0 +1,2 @@
+#!/bin/bash
+psql -U$PGUSER -h$PGHOST -d$PGDATABASE -c "UPDATE transactions SET confirmations = confirmations + 1, last_confirmation = now() WHERE txhash = ${1}"
