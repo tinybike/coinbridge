@@ -2,6 +2,13 @@
 
 ### Installation (Ubuntu 12.04 LTS)
 
+Short version:
+
+    $ ./install.sh
+
+Longer version:
+
+    $ pip install -r requirements.txt
     $ python setup.py install
 
 Install `bitcoind` (other coins need to be compiled from source)
