@@ -1,4 +1,4 @@
-## CoinBridge: a Bitcoin/PostgreSQL bridge
+## Bitcoin/PostgreSQL bridge
 
 ### Installation (Ubuntu 12.04 LTS)
 
@@ -24,11 +24,6 @@ Set environment variables:
     $ echo "export BITCOIN_RPC_USER=your_rpc_username" >> ~/.profile
     $ echo "export BITCOIN_RPC_PASS=your_rpc_password" >> ~/.profile
     $ echo "export BITCOIN_RPC_PORT=your_rpc_port" >> ~/.profile
-    $ echo "export PGUSER=your_postgres_username" >> ~/.profile
-    $ echo "export PGDATABASE=your_postgres_database" >> ~/.profile
-    $ echo "export PGHOST=your_postgres_host" >> ~/.profile
-    $ echo "export PGPORT=your_postgres_port" >> ~/.profile
-    $ echo "export PGPASS=your_postgres_password" >> ~/.profile
 
 Reload environment variables -- restart (better), or use `source ~/.profile` to update in the current shell.  Next, set up Bitcoin's config file:
     
@@ -49,10 +44,10 @@ Reload environment variables -- restart (better), or use `source ~/.profile` to 
 Install PostgreSQL and create a user, database, and transactions table:
 
     $ apt-get install postgresql postgresql-contrib -y
-    $ sudo -i -u postgres
-    $ psql -c "CREATE DATABASE $PGDATABASE ENCODING 'SQL_ASCII' TEMPLATE=template0;"
-    $ psql -c "CREATE USER $PGUSER WITH PASSWORD '$PGPASS';"
-    $ psql -c "GRANT ALL PRIVILEGES ON DATABASE '$PGDATABASE' TO $PGUSER;"
+    $ sudo -u postgres psql
+    postgres=# CREATE DATABASE $PGDATABASE ENCODING 'SQL_ASCII' TEMPLATE=template0;
+    postgres=# "CREATE USER $PGUSER WITH PASSWORD '$PGPASS';
+    postgres=# "GRANT ALL PRIVILEGES ON DATABASE '$PGDATABASE' TO $PGUSER;
     $ logout
 
 Set up `pgpass` file so transaction confirmations can be autologged to postgres:
