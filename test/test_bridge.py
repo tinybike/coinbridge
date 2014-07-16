@@ -5,7 +5,7 @@ import urllib2
 import unittest
 from decimal import Decimal
 import os, sys
-sys.path.append(os.path.join(os.path.dirname(__file__), os.pardir))
+sys.path.append(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir))
 from bridge import Bridge
 import config
 
