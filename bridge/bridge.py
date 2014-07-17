@@ -58,7 +58,7 @@ class Bridge(object):
                                        indent=3, sort_keys=True)
                 could_not_connect = (
                     "Could not create HTTP RPC connection "
-                    "to %s daemon using config: %s. Is the "
+                    "to %s daemon using config:\n%s\nIs the "
                     "daemon running?"
                 ) % (self.coin, coin_data)
                 raise Exception(could_not_connect)
@@ -268,7 +268,6 @@ class Bridge(object):
         Returns:
           str
         """
-        print self.move.__name__
         amount = Decimal(amount).quantize(self.quantum, rounding=ROUND_HALF_EVEN)
         return self.rpc.call("move",
             fromaccount, toaccount, float(str(amount)), minconf
