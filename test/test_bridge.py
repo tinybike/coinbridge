@@ -11,7 +11,7 @@ import unittest
 from decimal import Decimal, ROUND_HALF_EVEN
 import os, sys
 sys.path.append(os.path.join(os.path.dirname(__file__), os.pardir, "bridge"))
-from bridge import Bridge
+from bridge import Bridge, db
 import config
 
 class TestBridge(unittest.TestCase):
@@ -35,6 +35,23 @@ class TestBridge(unittest.TestCase):
         self.bridge.rpc_connect(testnet=self.testnet)
         self.bridge.walletlock()
         self.assertIn(self.bridge.coin, config.COINS)
+
+    def test_payment(self):
+        """Bridge.payment"""
+        # "move" payment: no transaction fee
+        old_balance = self.bridge.getbalance(self.user_id)
+        with self.bridge.openwallet():
+            result = self.bridge.payment(self.user_id,
+                                         self.address,
+                                         self.amount_to_send)
+        self.assertTrue(result)
+        new_balance = self.bridge.getbalance(self.user_id)
+        spent = old_balance - new_balance
+        print "Intended to send:", str(self.amount_to_send)
+        print "Actual amount (including fee):", str(spent)
+        print "Fee paid:", str(spent - self.amount_to_send)
+        self.assertEqual(spent, self.amount_to_send)
+
 
     def test_getinfo(self):
         """Bridge.getinfo"""
@@ -61,24 +78,22 @@ class TestBridge(unittest.TestCase):
     def test_walletunlock(self):
         """Bridge.walletunlock"""
         self.bridge.walletunlock()
-        txhash = self.bridge.sendfrom(self.user_id,
-                                    self.address,
-                                    self.amount_to_send)
-        self.assertIsNotNone(txhash)
-        self.assertEqual(type(txhash), str)
+        result = self.bridge.payment(self.user_id,
+                                     self.address,
+                                     self.amount_to_send)
+        self.assertTrue(result)
 
     def test_walletlock(self):
         """Bridge.walletlock"""
         self.bridge.walletunlock()
-        txhash = self.bridge.sendfrom(self.user_id,
-                                    self.address,
-                                    self.amount_to_send)
-        self.assertIsNotNone(txhash)
-        self.assertEqual(type(txhash), str)
+        result = self.bridge.payment(self.user_id,
+                                     self.address,
+                                     self.amount_to_send)
+        self.assertTrue(result)
         self.bridge.walletlock()
-        self.assertRaises(Exception, self.bridge.sendfrom(self.user_id,
-                                                          self.address,
-                                                          self.amount_to_send))
+        self.assertRaises(Exception, self.bridge.payment(self.user_id,
+                                                         self.address,
+                                                         self.amount_to_send))
 
     def sendfrom(self, destination):
         old_balance = self.bridge.getbalance(self.user_id)
@@ -100,6 +115,17 @@ class TestBridge(unittest.TestCase):
             print "Actual amount (including fee):", str(spent)
             print "Fee paid:", str(spent - self.amount_to_send)
             self.assertEqual(spent - self.amount_to_send, self.txfee)
+
+    def move(self, destination):
+        old_balance = self.bridge.getbalance(self.user_id)
+        with self.bridge.openwallet():
+            result = self.bridge.move(self.user_id, destination,
+                                      self.amount_to_send)
+        new_balance = self.bridge.getbalance(self.user_id)
+        return old_balance, new_balance
+
+    def test_move(self):
+        pass
 
     # def test_signmessage(self):
     #     """Bridge.signmessage"""

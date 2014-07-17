@@ -122,6 +122,7 @@ class Bridge(object):
             )
         db.session.add(tx)
         db.session.commit()
+        return outcome
 
     ##################################
     # Wrappers for JSON RPC commands #
