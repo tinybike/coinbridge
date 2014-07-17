@@ -25,7 +25,7 @@ class TestBridge(unittest.TestCase):
         self.amount_to_send = Decimal("0.01").quantize(self.quantum,
                                                        rounding=ROUND_HALF_EVEN)
         self.testnet = True
-        self.address = "n1ZrTB6epfayhzWLhqd2x2whFuSns6Ntgi"
+        self.address = "n2X1EZS4fAqYivnzQFUatpx4j3URyUWnBP"
         self.btc_testnet_faucet = "msj42CCGruhRsFrGATiUuh25dtxYtnpbTx"
         self.btc_mainnet = "1Q1wVsNNiUo68caU7BfyFFQ8fVBqxC2DSc"  # localbitcoins address
         self.test_address = "msrKBTfUoQHicmRucsfEYQ5Mbk5niVeWii" # "" account address on testnet
@@ -55,7 +55,7 @@ class TestBridge(unittest.TestCase):
         print "Intended to send:", str(self.amount_to_send)
         print "Actual amount (including fee):", str(spent)
         print "Fee paid:", str(spent - self.amount_to_send)
-        self.assertEqual(spent, self.amount_to_send)
+        self.assertEqual(spent, 0)
         self.assertEqual(old_balance, new_balance)
         # me -> other account in wallet
         old_balance = self.bridge.getbalance(self.user_id)
@@ -80,7 +80,7 @@ class TestBridge(unittest.TestCase):
         old_accounts = len(self.bridge.listaccounts())
         with self.bridge.openwallet():
             txhash = self.bridge.payment(self.user_id,
-                                         self.other_user_id,
+                                         self.btc_testnet_faucet,
                                          self.amount_to_send)
         self.assertIsNotNone(txhash)
         self.assertEqual(type(txhash), str)

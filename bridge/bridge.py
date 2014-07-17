@@ -217,19 +217,19 @@ class Bridge(object):
         List all addresses associated with this account
         """
         addresses = self.rpc.call("getaddressesbyaccount", user_id)
-        if config.DEBUG:
-            print "Address list for", user_id
-            for a in addresses:
-                print a
+        # if config.DEBUG:
+        #     print "Address list for", user_id
+        #     for a in addresses:
+        #         print a
         return addresses
-
-    @error_handler
-    def listaccounts(self):
-        return self.rpc.call("listaccounts")
 
     @error_handler
     def listaddresses(self, user_id=""):
         return self.rpc.getaddressesbyaccount(user_id)
+
+    @error_handler
+    def listaccounts(self):
+        return self.rpc.call("listaccounts")
     
     @error_handler
     def listtransactions(self, user_id="", count=10, start_at=0):
