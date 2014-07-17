@@ -38,5 +38,6 @@ COINS = {
         "passphrase": "uMrTVAOVSuoOkqEPcgtyFdiWWzlZOYX5",
         "unlock-timeout": 30,
         "decimals": 8,
+        "txfee": "0.0001",
     }
 }
