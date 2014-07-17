@@ -35,7 +35,7 @@ class Bridge(object):
         yield
         self.walletlock()
 
-    @error_handler("Bridge.payment")
+    @error_handler
     def payment(self, origin, destination, amount):
         """
         Send coins from origin to destination. Calls record_tx to log the
@@ -90,7 +90,7 @@ class Bridge(object):
                     txhash = self.sendfrom(origin, destination, amount)
                 return self.record_tx(origin, destination, amount, txhash)
 
-    @error_handler("Bridge.record_tx")
+    @error_handler
     def record_tx(self, origin, destination, amount,
                   outcome, destination_id=None):
         """Record transaction in the database."""
@@ -128,7 +128,7 @@ class Bridge(object):
     # Wrappers for JSON RPC commands #
     ##################################
 
-    @error_handler("Bridge.rpc_connect")
+    @error_handler
     def rpc_connect(self, testnet=False):
         """
         Connect to a coin daemon's JSON RPC interface.
@@ -158,19 +158,19 @@ class Bridge(object):
                 print self.coin, "bridge not found"
         return self.connected
 
-    @error_handler("Bridge.getinfo")
+    @error_handler
     def getinfo(self):
         """Get basic info for this coin"""
         return self.rpc.call("getinfo")
 
-    @error_handler("Bridge.gettransaction")
+    @error_handler
     def gettransaction(self, txhash):
         """
         Transaction data for a specified hash
         """
         return self.rpc.call("gettransaction", txhash)
 
-    @error_handler("Bridge.getaccountaddress")
+    @error_handler
     def getaccountaddress(self, user_id=""):
         """
         Get the coin address associated with a user id.  If the user id does
@@ -187,7 +187,7 @@ class Bridge(object):
             print "Your", self.coin, "address is", address
         return address
     
-    @error_handler("Bridge.getbalance")
+    @error_handler
     def getbalance(self, user_id="", as_decimal=True):
         """
         Calculate the total balance in all addresses belonging to this user.
@@ -208,7 +208,7 @@ class Bridge(object):
         else:
             return balance
 
-    @error_handler("Bridge.getaddressesbyaccount")
+    @error_handler
     def getaddressesbyaccount(self, user_id=""):
         """
         List all addresses associated with this account
@@ -220,15 +220,15 @@ class Bridge(object):
                 print a
         return addresses
 
-    @error_handler("Bridge.listaccounts")
+    @error_handler
     def listaccounts(self, user_id=""):
         return self.rpc.call("listaccounts")
 
-    @error_handler("Bridge.listaddresses")
+    @error_handler
     def listaddresses(self, user_id=""):
         return self.rpc.getaddressesbyaccount(user_id)
     
-    @error_handler("Bridge.listtransactions")
+    @error_handler
     def listtransactions(self, user_id="", count=10, start_at=0):
         """
         List all transactions associated with this account.
@@ -246,12 +246,12 @@ class Bridge(object):
             print "Got transaction list for", user_id
         return txlist
 
-    @error_handler("Bridge.inbound")
+    @error_handler
     def inbound(self, user_id):
         # get info from walletnotify?
         pass
 
-    @error_handler("Bridge.move")
+    @error_handler
     def move(self, fromaccount, toaccount, amount, minconf=1):
         """
         Send coins between accounts in the same wallet.  If the receiving
@@ -273,7 +273,7 @@ class Bridge(object):
             fromaccount, toaccount, float(str(amount)), minconf
         )
 
-    @error_handler("Bridge.sendfrom")
+    @error_handler
     def sendfrom(self, user_id, dest_address, amount, minconf=1):
         """
         Send coins from user's account.
@@ -299,11 +299,11 @@ class Bridge(object):
             print "Transaction hash:", txhash
         return txhash
 
-    @error_handler("Bridge.encryptwallet")
+    @error_handler
     def encryptwallet(self):
         self.rpc.call("encryptwallet", config.COINS[self.coin]["passphrase"])
 
-    @error_handler("Bridge.walletpassphrase")
+    @error_handler
     def walletpassphrase(self, timeout=30):
         try:
             self.rpc.call("walletpassphrase",
@@ -314,15 +314,15 @@ class Bridge(object):
             if config.TESTING:
                 raise
 
-    @error_handler("Bridge.walletunlock")
+    @error_handler
     def walletunlock(self, timeout=30):
         return self.walletpassphrase(int(timeout))
 
-    @error_handler("Bridge.walletlock")
+    @error_handler
     def walletlock(self):
         self.rpc.call("walletlock")
 
-    @error_handler("Bridge.signmessage")
+    @error_handler
     def signmessage(self, address, message):
         """
         Sign a message with the private key of an address.
@@ -339,7 +339,7 @@ class Bridge(object):
             print "Signature:", signature
         return signature
 
-    @error_handler("Bridge.verifymessage")
+    @error_handler
     def verifymessage(self, address, signature, message):
         """
         Verifies that a message has been signed by an address.
@@ -357,6 +357,7 @@ class Bridge(object):
             print "Signature verified:", verified
         return verified
 
-    @error_handler("Bridge.call")
+    @error_handler
     def call(self, command, *args):
         return self.rpc.call(str(command), *args)
+
