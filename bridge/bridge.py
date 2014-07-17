@@ -78,7 +78,7 @@ class Bridge(object):
         # "move" commands
         if destination_id:
             tx = Transaction(
-                txtype="move"
+                txtype="move",
                 from_user_id=origin,
                 to_user_id=destination_id,
                 txdate=datetime.now(),
@@ -91,7 +91,7 @@ class Bridge(object):
             confirmations = self.gettransaction(outcome)["confirmations"]
             last_confirmation = datetime.now() if confirmations else None
             tx = Transaction(
-                txtype="sendfrom"
+                txtype="sendfrom",
                 from_user_id=origin,
                 txhash=outcome,
                 txdate=datetime.now(),
@@ -249,7 +249,7 @@ class Bridge(object):
           str
         """
         print self.move.__name__
-        amount = Decimal(amount).quantize(quantum, rounding=ROUND_HALF_EVEN)
+        amount = Decimal(amount).quantize(self.quantum, rounding=ROUND_HALF_EVEN)
         return self.rpc.call("move",
             fromaccount, toaccount, float(str(amount)), minconf
         )
@@ -269,7 +269,7 @@ class Bridge(object):
         Returns:
           str: transaction ID
         """
-        amount = Decimal(amount).quantize(quantum, rounding=ROUND_HALF_EVEN)
+        amount = Decimal(amount).quantize(self.quantum, rounding=ROUND_HALF_EVEN)
         # base_unit_amount = amount * Decimal("1e" + str(config.COINS[self.coin]["decimals"]))
         # priority = sum(base_unit_amount * input_age)/size_in_bytes
         txhash = self.rpc.call("sendfrom",

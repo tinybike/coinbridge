@@ -21,8 +21,8 @@ Add the walletnotify flag to Bitcoin's config file:
     
     $ echo walletnotify=$BRIDGE/bitcoin-notify %s >> ~/.bitcoin/bitcoin.conf
    
-Set up `pgpass` file so transaction confirmations can be autologged to Postgres:
+Set up `pgpass` file so transaction confirmations can be autologged to Postgres (replace HOST, PORT, USER, DATABASE, PASSWORD with your own settings):
     
     $ touch ~/.pgpass
-    $ echo $PGHOST:$PGPORT:$PGUSER:$PGDATABASE:$PGPASSWORD >> ~/.pgpass
+    $ echo HOST:PORT:USER:DATABASE:PASSWORD >> ~/.pgpass
     $ chmod 600 ~/.pgpass

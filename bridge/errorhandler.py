@@ -1,7 +1,6 @@
 import os, sys, traceback
 from datetime import datetime
 from functools import wraps
-import config
 
 log = os.path.join("log", "bridge.log")
 if not os.path.isfile(log):
@@ -25,11 +24,8 @@ def error_handler(task=""):
                 with open(self.log, 'a') as logfile:
                     print >>logfile, erroroutput + "\nTraceback:"
                     traceback.print_tb(exc_tb, limit=5, file=logfile)
-                if config.DEBUG:
-                    raise
-                else:
-                    print "Error [%s]: %s RPC instruction failed" % (task,
-                                                                     self.coin)
-                    print "Traceback logged to", log
+                print "Error [%s]: %s RPC instruction failed" % (task,
+                                                                 self.coin)
+                print "Traceback logged to", log
         return wrapper
     return decorate

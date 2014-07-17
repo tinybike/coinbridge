@@ -1,0 +1,4 @@
+#!/bin/bash
+F=$BRIDGE/log/bitcoin.log
+D=`date +"%Y%m%d%H%M%S"`
+echo ${D} - ${1} >> ${F}

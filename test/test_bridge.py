@@ -1,3 +1,8 @@
+#!/usr/bin/env python
+"""
+coinbridge unit tests
+@author jack@tinybike.net
+"""
 import sys
 import cdecimal
 sys.modules["decimal"] = cdecimal

@@ -1,7 +1,12 @@
 #!/usr/bin/env python
-from __future__ import division
-from bridge import Bridge
+import sys
+import cdecimal
+sys.modules["decimal"] = cdecimal
 from decimal import Decimal
+import os
+from pprint import pprint
+sys.path.append(os.path.join(os.path.dirname(__file__), os.pardir, "bridge"))
+from bridge import Bridge
 import config
 
 config.TESTING = True
@@ -10,7 +15,7 @@ faucet = "msj42CCGruhRsFrGATiUuh25dtxYtnpbTx"
 b = Bridge()
 b.rpc_connect(testnet=True)
 
-print b.getinfo()
+pprint(b.getinfo())
 
 old_balance = b.getbalance("jack")
 
