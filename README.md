@@ -46,8 +46,8 @@ Install PostgreSQL and create a user, database, and transactions table:
     $ apt-get install postgresql postgresql-contrib -y
     $ sudo -u postgres psql
     postgres=# CREATE DATABASE $PGDATABASE ENCODING 'SQL_ASCII' TEMPLATE=template0;
-    postgres=# "CREATE USER $PGUSER WITH PASSWORD '$PGPASS';
-    postgres=# "GRANT ALL PRIVILEGES ON DATABASE '$PGDATABASE' TO $PGUSER;
+    postgres=# CREATE USER $PGUSER WITH PASSWORD '$PGPASS';
+    postgres=# GRANT ALL PRIVILEGES ON DATABASE '$PGDATABASE' TO $PGUSER;
     $ logout
 
 Set up `pgpass` file so transaction confirmations can be autologged to postgres:

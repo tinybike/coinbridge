@@ -10,12 +10,12 @@ else:
 TESTING = False
 
 POSTGRES = {
-    "host": os.environ.get("PGHOST", "localhost"),
-    "database": os.environ.get("PGDATABASE", "coinbridge"),
-    "user": os.environ.get("PGUSER", "coinbridge"),
-    "password": os.environ.get("PGPASSWORD", "replace-me-plx"),
-    "driver": os.environ.get("PGDRIVER", "psycopg2"),
-    "port": os.environ.get("PGPORT", 5432),
+    "host": "localhost",
+    "database": "coinbridge",
+    "user": "coinbridge",
+    "password": "overpass",
+    "driver": "psycopg2",
+    "port": 5432,
 }
 POSTGRES["urlstring"] = (
     "postgresql+" + POSTGRES["driver"] + "://" +
@@ -37,6 +37,7 @@ COINS = {
         "rpc-password": "qBrbIrxGlUhh797oIOwKRN7XN7lavBAq",
         "passphrase": "uMrTVAOVSuoOkqEPcgtyFdiWWzlZOYX5",
         "unlock-timeout": 30,
+        "decimals": 8,
     }
 }
 COINS["bitcoin"]["rpc-urlstring"] = "http://ZTwijIDcaRCY:qBrbIrxGlUhh797oIOwKRN7XN7lavBAq@127.0.0.1:8332"

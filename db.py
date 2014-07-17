@@ -11,14 +11,16 @@ class Transaction(Base):
     __tablename__ = "transactions"
 
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer)
+    txtype = Column(String(25), default="internal")
+    from_user_id = Column(Integer)
+    to_user_id = Column(Integer)
     txhash = Column(String(100))
     txdate = Column(DateTime, default=func.transaction_timestamp())
     amount = Column(Numeric(precision=23, scale=8, asdecimal=True))
     currency = Column(String(10), nullable=False)
-    coin_address = Column(String(100))
-    inbound = Column(Boolean) # True for inbound bridge, False for outbound, NULL for non-bridge
-    confirmations = Column(Integer, default=0)
+    from_coin_address = Column(String(100))
+    to_coin_address = Column(String(100))
+    confirmations = Column(Integer)
     last_confirmation = Column(DateTime)
 
 

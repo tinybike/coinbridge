@@ -3,14 +3,17 @@
 Coin bridges for fun and profit
 Usage:
     from bridge import Bridge
-    bitcoin_bridge = Bridge("Bitcoin")
+    bitcoin_bridge = Bridge()
     ...
 @author jack@tinybike.net (Jack Peterson)
 @license None yet, you dirty thief
 """
 import urllib2
-from decimal import Decimal
+from datetime import datetime
+from decimal import Decimal, ROUND_HALF_EVEN
+from contextlib import contextmanager
 import pyjsonrpc
+from errorhandler import error_handler
 import config
 import db
 
@@ -18,10 +21,88 @@ db.init()
 
 class Bridge(object):
 
-    def __init__(self, coin, logfile="log/bridge.log"):
+    def __init__(self, coin="Bitcoin", logfile="log/bridge.log"):
         self.coin = coin.lower()
         self.connected = False
+        self.quantum = Decimal("1e-"+str(config.COINS[self.coin]["decimals"]))
         self.log = logfile
+
+    @contextmanager
+    def openwallet(self):
+        self.walletunlock()
+        yield
+        self.walletlock()
+
+    @error_handler("Bridge.send_coins")
+    def send_coins(self, origin, destination, amount):
+        """
+        Send coins from origin to destination.
+
+        Args:
+          origin (str): user_id of the sender
+          destination (str): coin address or user_id of the recipient
+          amount (str, Decimal, number): 
+
+        Returns:
+          bool: True if successful, False otherwise
+        """
+        if type(amount) != Decimal:
+            amount = Decimal(amount)
+        if amount <= 0:
+            raise("Error: amount must be a positive number")
+        # Check if the destination is within the same wallet;
+        # if so, we can use the fast (and free) "move" command
+        all_addresses = []
+        accounts = self.listaccounts()
+        if origin in accounts:
+            if destination in accounts:
+                with self.openwallet():
+                    self.move(origin, destination, amount)
+                return self.record_tx(origin, None, amount, res, destination)
+            for account in accounts:
+                addresses = self.getaddressesbyaccount(account)
+                if destination in addresses:
+                    with self.openwallet():
+                        res = self.move(origin, account, amount)
+                    return self.record_tx(origin, destination, amount, res, account)
+            # Didn't find anything, so use "sendfrom" instead
+            else:
+                with self.openwallet():
+                    txhash = self.sendfrom(origin, destination, amount)
+                return self.record_tx(origin, destination, amount, txhash)
+
+    @error_handler("Bridge.record_tx")
+    def record_tx(self, origin, destination, amount,
+                  outcome, destination_id=None):
+        """Record transaction in the database."""
+        # "move" commands
+        if destination_id:
+            tx = Transaction(
+                txtype="move"
+                from_user_id=origin,
+                to_user_id=destination_id,
+                txdate=datetime.now(),
+                amount=amount,
+                currency=config.COINS[self.coin]["ticker"],
+                to_coin_address=destination,
+            )
+        # "sendfrom" commands
+        else:
+            confirmations = self.gettransaction(outcome)["confirmations"]
+            last_confirmation = datetime.now() if confirmations else None
+            tx = Transaction(
+                txtype="sendfrom"
+                from_user_id=origin,
+                txhash=outcome,
+                txdate=datetime.now(),
+                amount=amount,
+                currency=config.COINS[self.coin]["ticker"],
+                to_coin_address=destination,
+                confirmations=confirmations,
+                last_confirmation=last_confirmation
+            )
+        db.session.add(tx)
+        db.session.commit()
 
     ##################################
     # Wrappers for JSON RPC commands #
@@ -62,8 +143,15 @@ class Bridge(object):
         """Get basic info for this coin"""
         return self.rpc.call("getinfo")
 
+    @error_handler("Bridge.gettransaction")
+    def gettransaction(self, txhash):
+        """
+        Transaction data for a specified hash
+        """
+        return self.rpc.call("gettransaction", txhash)
+
     @error_handler("Bridge.getaccountaddress")
-    def getaccountaddress(self, user_id):
+    def getaccountaddress(self, user_id=""):
         """
         Get the coin address associated with a user id.  If the user id does
         not yet have an address for this coin, generate one.
@@ -80,26 +168,48 @@ class Bridge(object):
         return address
     
     @error_handler("Bridge.getbalance")
-    def getbalance(self, user_id, as_decimal=False):
+    def getbalance(self, user_id="", as_decimal=True):
         """
         Calculate the total balance in all addresses belonging to this user.
 
         Args:
           user_id (str): this user's unique identifier
+          as_decimal (bool): balance is returned as a Decimal if True (default)
+                             or a string if False
 
         Returns:
           str: this account's total coin balance
         """
         balance = str(self.rpc.call("getbalance", user_id))
         if config.DEBUG:
-            print user_id, self.coin, "balance:", balance
+            print "\"" + user_id + "\"", self.coin, "balance:", balance
         if as_decimal:
             return Decimal(balance)
         else:
             return balance
+
+    @error_handler("Bridge.getaddressesbyaccount")
+    def getaddressesbyaccount(self, user_id=""):
+        """
+        List all addresses associated with this account
+        """
+        addresses = self.rpc.call("getaddressesbyaccount", user_id)
+        if config.DEBUG:
+            print "Address list for", user_id
+            for a in addresses:
+                print a
+        return addresses
+
+    @error_handler("Bridge.listaccounts")
+    def listaddresses(self, user_id=""):
+        return self.rpc.call("listaccounts")
+
+    @error_handler("Bridge.listaddresses")
+    def listaddresses(self, user_id=""):
+        return self.rpc.getaddressesbyaccount(user_id)
     
     @error_handler("Bridge.listtransactions")
-    def listtransactions(self, user_id, count=10, start_at=0):
+    def listtransactions(self, user_id="", count=10, start_at=0):
         """
         List all transactions associated with this account.
 
@@ -121,41 +231,73 @@ class Bridge(object):
         # get info from walletnotify?
         pass
 
+    @error_handler("Bridge.move")
+    def move(self, fromaccount, toaccount, amount, minconf=1):
+        """
+        Send coins between accounts in the same wallet.  If the receiving
+        account does not exist, it is automatically created (but not
+        automatically assigned an address).
+
+        Args:
+          fromaccount (str): origin account
+          toaccount (str): destination account
+          amount (str or Decimal): amount to send (8 decimal points)
+          minconf (int): ensure the account has a valid balance using this
+                         many confirmations (default=1) 
+
+        Returns:
+          str
+        """
+        print self.move.__name__
+        amount = Decimal(amount).quantize(quantum, rounding=ROUND_HALF_EVEN)
+        return self.rpc.call("move",
+            fromaccount, toaccount, float(str(amount)), minconf
+        )
+
     @error_handler("Bridge.sendfrom")
-    def sendfrom(self, user_id, address, amount, minconf=1):
+    def sendfrom(self, user_id, dest_address, amount, minconf=1):
         """
         Send coins from user's account.
 
         Args:
           user_id (str): this user's unique identifier
-          address (str): address which is to receive coins
-          amount (eight decimal points): amount to send
+          dest_address (str): address which is to receive coins
+          amount (str or Decimal): amount to send (eight decimal points)
           minconf (int): ensure the account has a valid balance using this
                          many confirmations (default=1)
 
         Returns:
           str: transaction ID
         """
-        txid = self.rpc.call("sendfrom", user_id, address, amount, minconf)
+        amount = Decimal(amount).quantize(quantum, rounding=ROUND_HALF_EVEN)
+        # base_unit_amount = amount * Decimal("1e" + str(config.COINS[self.coin]["decimals"]))
+        # priority = sum(base_unit_amount * input_age)/size_in_bytes
+        txhash = self.rpc.call("sendfrom",
+            user_id, dest_address, float(str(amount)), minconf
+        )
         if config.DEBUG:
-            print "Sent", amount, self.coin, "from", user_id, "to", address
-            print "Transaction ID:", txid
-        return txid
+            print "Sent", amount, self.coin, "from", user_id, "to", dest_address
+            print "Transaction hash:", txhash
+        return txhash
+
+    @error_handler("Bridge.encryptwallet")
+    def encryptwallet(self):
+        self.rpc.call("encryptwallet", config.COINS[self.coin]["passphrase"])
 
     @error_handler("Bridge.walletpassphrase")
-    def walletpassphrase(self, passphrase, timeout):
+    def walletpassphrase(self, timeout=30):
         try:
             self.rpc.call("walletpassphrase",
                           config.COINS[self.coin]["passphrase"],
-                          timeout)
-        except urllib2.HTTPError:
+                          int(timeout))
+        except:
             print "Could not unlock wallet"
             if config.TESTING:
                 raise
 
     @error_handler("Bridge.walletunlock")
-    def walletunlock(self, passphrase, timeout):
-        self.walletpassphrase(passphrase, int(timeout))
+    def walletunlock(self, timeout=30):
+        return self.walletpassphrase(int(timeout))
 
     @error_handler("Bridge.walletlock")
     def walletlock(self):
@@ -199,7 +341,3 @@ class Bridge(object):
     @error_handler("Bridge.call")
     def call(self, command, *args):
         return self.rpc.call(str(command), *args)
-
-
-if __name__ == '__main__':
-    bridge = Bridge("Bitcoin")
