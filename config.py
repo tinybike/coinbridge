@@ -40,4 +40,3 @@ COINS = {
         "decimals": 8,
     }
 }
-COINS["bitcoin"]["rpc-urlstring"] = "http://ZTwijIDcaRCY:qBrbIrxGlUhh797oIOwKRN7XN7lavBAq@127.0.0.1:8332"
