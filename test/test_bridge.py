@@ -6,7 +6,6 @@ coinbridge unit tests
 import sys
 import cdecimal
 sys.modules["decimal"] = cdecimal
-import urllib2
 import unittest
 from decimal import Decimal, ROUND_HALF_EVEN
 import os, sys

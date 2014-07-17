@@ -245,11 +245,6 @@ class Bridge(object):
         return txlist
 
     @error_handler
-    def inbound(self, user_id):
-        # get info from walletnotify?
-        pass
-
-    @error_handler
     def move(self, fromaccount, toaccount, amount, minconf=1):
         """
         Send coins between accounts in the same wallet.  If the receiving
