@@ -167,20 +167,34 @@ class TestBridge(unittest.TestCase):
         return old_balance, new_balance
 
     def test_move(self):
-        pass
+        """Bridge.move"""
+        for destination in (self.other_user_id, self.test_address):
+            old_balance, new_balance = self.move(destination)
+            spent = old_balance - new_balance
+            print "Intended to send:", str(self.amount_to_send)
+            print "Actual amount (including fee):", str(spent)
+            print "Fee paid:", str(spent - self.amount_to_send)
+            self.assertEqual(spent, self.amount_to_send)
+        self.assertRaises(Exception, self.move(destination))
 
-    # def test_signmessage(self):
-    #     """Bridge.signmessage"""
-    #     signature = self.bridge.signmessage(self.test_address, self.message)
+    def test_signmessage(self):
+        """Bridge.signmessage"""
+        with self.bridge.openwallet():
+            signature = self.bridge.signmessage(self.test_address,
+                                                self.message)
+        self.assertIsNotNone(signature)
+        self.assertEqual(type(signature), str)
 
-    # def test_verifymessage(self):
-    #     """Bridge.verifymessage"""
-    #     signature = self.bridge.signmessage(self.test_address,
-    #                                         self.message)
-    #     verified = self.bridge.verifymessage(self.test_address,
-    #                                          signature,
-    #                                          self.message)
-    #     self.assertTrue(verified)
+    def test_verifymessage(self):
+        """Bridge.verifymessage"""
+        with self.bridge.openwallet():
+            signature = self.bridge.signmessage(self.test_address,
+                                                self.message)
+            self.assertIsNotNone(signature)
+            verified = self.bridge.verifymessage(self.test_address,
+                                                 signature,
+                                                 self.message)
+        self.assertTrue(verified)
 
     def tearDown(self):
         del self.bridge
