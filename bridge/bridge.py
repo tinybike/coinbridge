@@ -9,6 +9,8 @@ Usage:
 @license None yet, you dirty thief
 """
 import urllib2
+import json
+import time
 from datetime import datetime
 from decimal import Decimal, ROUND_HALF_EVEN
 from contextlib import contextmanager
@@ -33,23 +35,38 @@ class Bridge(object):
         yield
         self.walletlock()
 
-    @error_handler("Bridge.send_coins")
-    def send_coins(self, origin, destination, amount):
+    @error_handler("Bridge.payment")
+    def payment(self, origin, destination, amount):
         """
-        Send coins from origin to destination.
+        Send coins from origin to destination. Calls record_tx to log the
+        transaction to database.
 
         Args:
           origin (str): user_id of the sender
           destination (str): coin address or user_id of the recipient
-          amount (str, Decimal, number): 
+          amount (str, Decimal, number): amount to send
 
         Returns:
           bool: True if successful, False otherwise
         """
+        attempts = 0
+        while not self.connected:
+            attempts += 1
+            self.rpc_connect()
+            if attempts > 5:
+                coin_data = json.dumps(config.COINS[self.coin],
+                                       indent=3, sort_keys=True)
+                could_not_connect = (
+                    "Could not create HTTP RPC connection "
+                    "to %s daemon using config: %s. Is the "
+                    "daemon running?"
+                ) % (self.coin, coin_data)
+                raise Exception(could_not_connect)
+            time.sleep(5)
         if type(amount) != Decimal:
             amount = Decimal(amount)
         if amount <= 0:
-            raise("Error: amount must be a positive number")
+            raise Exception("Amount must be a positive number")
         # Check if the destination is within the same wallet;
         # if so, we can use the fast (and free) "move" command
         all_addresses = []
@@ -57,14 +74,16 @@ class Bridge(object):
         if origin in accounts:
             if destination in accounts:
                 with self.openwallet():
-                    self.move(origin, destination, amount)
-                return self.record_tx(origin, None, amount, res, destination)
+                    result = self.move(origin, destination, amount)
+                return self.record_tx(origin, None, amount,
+                                      result, destination)
             for account in accounts:
                 addresses = self.getaddressesbyaccount(account)
                 if destination in addresses:
                     with self.openwallet():
-                        res = self.move(origin, account, amount)
-                    return self.record_tx(origin, destination, amount, res, account)
+                        result = self.move(origin, account, amount)
+                    return self.record_tx(origin, destination, amount,
+                                          result, account)
             # Didn't find anything, so use "sendfrom" instead
             else:
                 with self.openwallet():
@@ -77,7 +96,7 @@ class Bridge(object):
         """Record transaction in the database."""
         # "move" commands
         if destination_id:
-            tx = Transaction(
+            tx = db.Transaction(
                 txtype="move",
                 from_user_id=origin,
                 to_user_id=destination_id,
@@ -90,7 +109,7 @@ class Bridge(object):
         else:
             confirmations = self.gettransaction(outcome)["confirmations"]
             last_confirmation = datetime.now() if confirmations else None
-            tx = Transaction(
+            tx = db.Transaction(
                 txtype="sendfrom",
                 from_user_id=origin,
                 txhash=outcome,
@@ -201,7 +220,7 @@ class Bridge(object):
         return addresses
 
     @error_handler("Bridge.listaccounts")
-    def listaddresses(self, user_id=""):
+    def listaccounts(self, user_id=""):
         return self.rpc.call("listaccounts")
 
     @error_handler("Bridge.listaddresses")

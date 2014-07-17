@@ -26,6 +26,6 @@ def error_handler(task=""):
                     traceback.print_tb(exc_tb, limit=5, file=logfile)
                 print "Error [%s]: %s RPC instruction failed" % (task,
                                                                  self.coin)
-                print "Traceback logged to", log
+                print "Traceback sent to", log
         return wrapper
     return decorate
