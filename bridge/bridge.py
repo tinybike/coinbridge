@@ -4,10 +4,11 @@ Coin bridges for fun and profit
 Usage:
     from bridge import Bridge
     bitcoin_bridge = Bridge()
-    ...
+    bitcoin_bridge.payment(from_account, to_account, amount)
 @author jack@tinybike.net (Jack Peterson)
 @license None yet, you dirty thief
 """
+import os
 import urllib2
 import json
 import time
@@ -23,11 +24,12 @@ db.init()
 
 class Bridge(object):
 
-    def __init__(self, coin="Bitcoin", logfile="log/bridge.log"):
+    def __init__(self, coin="Bitcoin", logfile="bridge.log"):
         self.coin = coin.lower()
         self.connected = False
         self.quantum = Decimal("1e-"+str(config.COINS[self.coin]["decimals"]))
-        self.log = logfile
+        self.log = os.path.join(os.path.dirname(__file__),
+                                os.pardir, "log", logfile)
 
     @contextmanager
     def openwallet(self):
@@ -107,6 +109,7 @@ class Bridge(object):
             )
         # "sendfrom" commands
         else:
+            print self.gettransaction(outcome)
             confirmations = self.gettransaction(outcome)["confirmations"]
             last_confirmation = datetime.now() if confirmations else None
             tx = db.Transaction(
@@ -221,7 +224,7 @@ class Bridge(object):
         return addresses
 
     @error_handler
-    def listaccounts(self, user_id=""):
+    def listaccounts(self):
         return self.rpc.call("listaccounts")
 
     @error_handler

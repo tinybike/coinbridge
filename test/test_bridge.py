@@ -19,6 +19,7 @@ class TestBridge(unittest.TestCase):
     def setUp(self):
         config.TESTING = True
         self.user_id = "4"
+        self.other_user_id = "5"
         self.coin = "Bitcoin"
         self.quantum = Decimal("1e-"+str(config.COINS[self.coin.lower()]["decimals"]))
         self.amount_to_send = Decimal("0.01").quantize(self.quantum,
@@ -38,20 +39,61 @@ class TestBridge(unittest.TestCase):
 
     def test_payment(self):
         """Bridge.payment"""
-        # "move" payment: no transaction fee
+        # "move" payments: no transaction fee
+        # me -> me
         old_balance = self.bridge.getbalance(self.user_id)
+        old_accounts = len(self.bridge.listaccounts())
         with self.bridge.openwallet():
             result = self.bridge.payment(self.user_id,
                                          self.address,
                                          self.amount_to_send)
         self.assertTrue(result)
         new_balance = self.bridge.getbalance(self.user_id)
+        new_accounts = len(self.bridge.listaccounts())
+        self.assertEqual(old_accounts, new_accounts)
         spent = old_balance - new_balance
         print "Intended to send:", str(self.amount_to_send)
         print "Actual amount (including fee):", str(spent)
         print "Fee paid:", str(spent - self.amount_to_send)
         self.assertEqual(spent, self.amount_to_send)
-
+        self.assertEqual(old_balance, new_balance)
+        # me -> other account in wallet
+        old_balance = self.bridge.getbalance(self.user_id)
+        old_accounts = len(self.bridge.listaccounts())
+        with self.bridge.openwallet():
+            result = self.bridge.payment(self.user_id,
+                                         self.other_user_id,
+                                         self.amount_to_send)
+        self.assertTrue(result)
+        new_balance = self.bridge.getbalance(self.user_id)
+        new_accounts = len(self.bridge.listaccounts())
+        self.assertEqual(old_accounts, new_accounts)
+        spent = old_balance - new_balance
+        print "Intended to send:", str(self.amount_to_send)
+        print "Actual amount (including fee):", str(spent)
+        print "Fee paid:", str(spent - self.amount_to_send)
+        self.assertEqual(spent, self.amount_to_send)
+        self.assertEqual(old_balance - new_balance, self.amount_to_send)
+        # "sendfrom" payments: transaction fee
+        # me -> outside account
+        old_balance = self.bridge.getbalance(self.user_id)
+        old_accounts = len(self.bridge.listaccounts())
+        with self.bridge.openwallet():
+            txhash = self.bridge.payment(self.user_id,
+                                         self.other_user_id,
+                                         self.amount_to_send)
+        self.assertIsNotNone(txhash)
+        self.assertEqual(type(txhash), str)
+        new_balance = self.bridge.getbalance(self.user_id)
+        new_accounts = len(self.bridge.listaccounts())
+        self.assertEqual(old_accounts, new_accounts)
+        spent = old_balance - new_balance
+        print "Intended to send:", str(self.amount_to_send)
+        print "Actual amount (including fee):", str(spent)
+        print "Fee paid:", str(spent - self.amount_to_send)
+        self.assertEqual(spent - self.amount_to_send, self.txfee)
+        self.assertEqual(old_balance - new_balance,
+                         self.amount_to_send + self.txfee)
 
     def test_getinfo(self):
         """Bridge.getinfo"""
