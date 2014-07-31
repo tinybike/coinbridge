@@ -7,3 +7,5 @@ nose
 sqlalchemy
 bunch
 python-jsonrpc
+tornado
+psycopg2

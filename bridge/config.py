@@ -22,6 +22,7 @@ POSTGRES["urlstring"] = (
     POSTGRES["user"] + ":" + POSTGRES["password"] + "@" +
     POSTGRES["host"] + "/" + POSTGRES["database"]
 )
+POSTGRES_NOTIFY_CHANNEL = 'confirmations'
 
 # Coin daemon info
 COINS = {

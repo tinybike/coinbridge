@@ -1,5 +1,5 @@
-from sqlalchemy import Column, Integer, String, Numeric, DateTime, Boolean, Table, Text, Float
-from sqlalchemy import create_engine, func
+from sqlalchemy import Column, Integer, String, Numeric, DateTime, Boolean,\
+                       Table, Text, Float, create_engine, func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.schema import MetaData
@@ -8,7 +8,7 @@ import config
 Base = declarative_base()
 
 class Transaction(Base):
-    """"""
+
     __tablename__ = "transactions"
 
     id = Column(Integer, primary_key=True)
