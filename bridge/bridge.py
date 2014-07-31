@@ -17,20 +17,21 @@ from datetime import datetime
 from decimal import Decimal, ROUND_HALF_EVEN
 from contextlib import contextmanager
 import pyjsonrpc
+import logging
 from errorhandler import error_handler
 import config
 import db
 
 db.init()
+logging.basicConfig(level=logging.INFO)
 
 class Bridge(object):
 
-    def __init__(self, coin="Bitcoin", logfile="bridge.log"):
+    def __init__(self, coin="Bitcoin"):
         self.coin = coin.lower()
         self.connected = False
         self.quantum = Decimal("1e-"+str(config.COINS[self.coin]["decimals"]))
-        self.log = os.path.join(os.path.dirname(__file__),
-                                os.pardir, "log", logfile)
+        self.logger = logging.getLogger(__name__)
 
     @contextmanager
     def openwallet(self):
@@ -110,7 +111,7 @@ class Bridge(object):
             )
         # "sendfrom" commands
         else:
-            print self.gettransaction(outcome)
+            self.logger.info(self.gettransaction(outcome))
             confirmations = self.gettransaction(outcome)["confirmations"]
             last_confirmation = datetime.now() if confirmations else None
             tx = db.Transaction(
@@ -155,11 +156,11 @@ class Bridge(object):
                 password=config.COINS[self.coin]["rpc-password"]
             )
             if config.DEBUG:
-                print self.coin, "RPC connection ok"
+                self.logger.debug(self.coin, "RPC connection ok")
             self.connected = True
         else:
             if config.DEBUG:
-                print self.coin, "bridge not found"
+                self.logger.debug(self.coin, "bridge not found")
         return self.connected
 
     @error_handler
@@ -187,8 +188,7 @@ class Bridge(object):
           str: address for this coin.
         """
         address = self.rpc.call("getaccountaddress", user_id)
-        if config.DEBUG:
-            print "Your", self.coin, "address is", address
+        self.logger.debug("Your", self.coin, "address is", address)
         return address
     
     @error_handler
@@ -205,8 +205,7 @@ class Bridge(object):
           str: this account's total coin balance
         """
         balance = str(self.rpc.call("getbalance", user_id))
-        if config.DEBUG:
-            print "\"" + user_id + "\"", self.coin, "balance:", balance
+        self.logger.debug("\"" + user_id + "\"", self.coin, "balance:", balance)
         if as_decimal:
             return Decimal(balance)
         else:
@@ -241,8 +240,7 @@ class Bridge(object):
           list [dict]: transactions associated with this user's account
         """
         txlist = self.rpc.call("listtransactions", user_id, count, start_at)
-        if config.DEBUG:
-            print "Got transaction list for", user_id
+        self.logger.debug("Got transaction list for " + str(user_id))
         return txlist
 
     @error_handler
@@ -288,9 +286,9 @@ class Bridge(object):
         txhash = self.rpc.call("sendfrom",
             user_id, dest_address, float(str(amount)), minconf
         )
-        if config.DEBUG:
-            print "Sent", amount, self.coin, "from", user_id, "to", dest_address
-            print "Transaction hash:", txhash
+        self.logger.debug("Send %s %s from %s to %s" % (str(amount), self.coin,
+                                                        str(user_id), dest_address))
+        self.logger.debug("Transaction hash: %s" % txhash)
         return txhash
 
     @error_handler
@@ -304,7 +302,7 @@ class Bridge(object):
                           config.COINS[self.coin]["passphrase"],
                           int(timeout))
         except:
-            print "Could not unlock wallet"
+            self.logger.warn("Could not unlock wallet")
             if config.TESTING:
                 raise
 
@@ -329,8 +327,7 @@ class Bridge(object):
           str: message signed with ECDSA signature
         """
         signature = self.rpc.call("signmessage", address, message)
-        if config.DEBUG:
-            print "Signature:", signature
+        self.logger.debug("Signature: %s" % signature)
         return signature
 
     @error_handler
@@ -347,8 +344,7 @@ class Bridge(object):
           bool: True if the address signed the message, False otherwise
         """
         verified = self.rpc.call("verifymessage", address, signature, message)
-        if config.DEBUG:
-            print "Signature verified:", verified
+        self.logger.debug("Signature verified: %s" % str(verified))
         return verified
 
     @error_handler

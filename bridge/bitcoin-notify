@@ -1,3 +1,3 @@
 #!/bin/bash
 confirms=`bitcoind gettransaction ${1} | jq '.["confirmations"]'`
-psql -Ucoinbridge -hlocalhost -dcoinbridge -c "UPDATE transactions SET confirmations = $confirms, last_confirmation = now() WHERE txhash = '${1}'"
+psql -Ucoinbridge -hlocalhost -dcoinbridge -c "UPDATE transactions SET confirmations = $confirms, last_confirmation = now() WHERE txhash = '${1}'" &> /dev/null
