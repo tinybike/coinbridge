@@ -1,3 +1,15 @@
 #!/bin/bash
-confirms=`bitcoind gettransaction ${1} | jq '.["confirmations"]'`
-psql -Ucoinbridge -hlocalhost -dcoinbridge -c "UPDATE transactions SET confirmations = $confirms, last_confirmation = now() WHERE txhash = '${1}'" &> /dev/null
+txhash=${1}
+confirms=`bitcoind gettransaction $txhash | jq '.["confirmations"]'`
+update=`psql -Ucoinbridge -hlocalhost -dcoinbridge -c "UPDATE transactions SET confirmations = $confirms, last_confirmation = now() WHERE txhash = '$txhash'"`
+if [ "$update" == 'UPDATE 0' ]; then
+    sendrecv=`bitcoind gettransaction $txhash | jq '.["details"][0]["category"]'`
+    address=`bitcoind gettransaction $txhash | jq '.["details"][0]["address"]'`
+    account=`bitcoind gettransaction $txhash | jq '.["details"][0]["account"]'`
+    amount=`bitcoind gettransaction $txhash | jq '.["details"][0]["amount"]'`
+    if [ $sendrecv == 'send' ]; then
+        psql -Ucoinbridge -hlocalhost -dcoinbridge -c "INSERT INTO transactions (txtype, from_user_id, txhash, amount, currency, from_coin_address, confirmations, last_confirmation) VALUES ('sendfrom', '$account', '$txhash', '$amount', 'BTC', '$address', $confirms, now())"
+    else
+        psql -Ucoinbridge -hlocalhost -dcoinbridge -c "INSERT INTO transactions (txtype, to_user_id, txhash, amount, currency, to_coin_address, confirmations, last_confirmation) VALUES ('inbound', '$account', '$txhash', '$amount', 'BTC', '$address', $confirms, now())"
+    fi
+fi
