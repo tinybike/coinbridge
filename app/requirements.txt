@@ -1,0 +1,13 @@
+tornado
+sockjs-tornado
+psycopg2
+markupsafe
+Jinja2
+requests
+py-bcrypt
+sqlalchemy
+nose
+coverage
+redis
+tornado-redis
+pyOpenSSL
