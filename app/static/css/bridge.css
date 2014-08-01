@@ -267,6 +267,10 @@
     clear: both;
 }
 
+.address {
+    display: none;
+}
+
 .light-gray-box {
     border: 1px solid #ccc;
     padding: 25px 25px 0 25px;
