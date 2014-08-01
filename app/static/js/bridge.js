@@ -671,7 +671,7 @@ var BRIDGE = (function (my, ripple, stellar, $) {
     function StellarReactor() {
         var self = this;
         this.tx_feed = $('#live-feed');
-        this.remote = new stellar.Remote(rippled_params);
+        this.remote = new stellar.Remote(stellard_params);
         this.remote.connect(function () {
             self.remote.on('transaction_all', self.parse_tx);
             self.remote.on('ledger_closed', self.parse_ledger);
@@ -717,7 +717,7 @@ var BRIDGE = (function (my, ripple, stellar, $) {
     function StellarRequest(account, outlet) {
         var self = this;
         this.account = account;
-        this.remote = new stellar.Remote(rippled_params);
+        this.remote = new stellar.Remote(stellard_params);
         this.outlet = $('#display-stellar-balance');
         this.order_outlet = $('#display-stellar-orders');
         this.user_order_outlet = $('#user-stellar-open-orders');
@@ -1294,11 +1294,11 @@ var BRIDGE = (function (my, ripple, stellar, $) {
             offers.show();
             rr2 = new RippleRequest(wallet.address);
             rr2.order_book();
-            sr = new StellarRequest(wallet.address);
-            sr.user_open_orders(true);
-            offers.show();
-            sr2 = new StellarRequest(wallet.address);
-            sr2.order_book();
+            // sr = new StellarRequest(wallet.address);
+            // sr.user_open_orders(true);
+            // offers.show();
+            // sr2 = new StellarRequest(wallet.address);
+            // sr2.order_book();
             bridge.charts();
             bridge.sync();
             setTimeout(function () { bridge.sync(); }, 10000);
