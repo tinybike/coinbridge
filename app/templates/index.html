@@ -2,13 +2,18 @@
 {% block page %}<script>window.page = "index";</script>{% endblock %}
 {% block body %}
   <div class="row">
-    <div class="large-12 columns">
-      {% include "tabs.html" %}
-    </div>
+    {% include "tabs.html" %}
   </div>
 {% endblock %}
 {% block lowerbody %}
   <div class="row">
+    <div class="large-6 columns" id="offer-cancel-action">
+      <center><h6>Open Orders</h6><small>click to cancel</small></center>
+      <hr />
+      <div id="user-open-orders"></div>
+      <form id="OfferCancel" method="POST" action='#' class="transaction">
+      </form>
+    </div>
     <div class="large-6 columns end">
       <div id="display-orders">
         <div id="loading-circle">
@@ -18,18 +23,14 @@
         </div>
       </div>
     </div>
+  </div>
+  <div class="row">
     <form id="get-order-book" method="POST" action='#'>
-      <div class="large-4 columns">
+      <div class="large-12 columns">
         <select id="order-book-picker">
           <option value="XRP-BTC.Bitstamp">Ripple vs Bitcoin (Bitstamp)</option>
           <option value="XRP-USD.Bitstamp">Ripple vs US Dollar (Bitstamp)</option>
         </select>
-      </div>
-      <div class="large-2 columns end">
-        <input type="text" id="order-book-limit" placeholder="# results" />
-      </div>
-      <div class="row full-width">
-        <input type="submit" value="Go" class="right" />
       </div>
     </form>
   </div>

@@ -11,7 +11,7 @@ var BRIDGE = (function (my, ripple, $) {
         delete my._exports;
         delete my._seal;
         delete my._unseal;
-    };    
+    };
     var _unseal = my._unseal = my._unseal || function () {
         my._exports = _exports;
         my._seal = _seal;
@@ -347,7 +347,7 @@ var BRIDGE = (function (my, ripple, $) {
             if (err) {
                 if (err.error == "remoteError") {
                     self.xrp = null;
-                    self.display_balance("Unfunded account");
+                    self.display_balance("0");
                 }
             } else {
                 self.xrp = parseFloat(res.account_data.Balance) / Math.pow(10,6);
@@ -365,7 +365,7 @@ var BRIDGE = (function (my, ripple, $) {
                     self.coins = {};
                     return null;
                 }
-            } else {
+            } else if (res != null && res != undefined) {
                 self.coin_outlet.empty();
                 if (res.lines && res.lines.length) {
                     for (var i = 0, len = res.lines.length; i < len; ++i) {
@@ -444,20 +444,22 @@ var BRIDGE = (function (my, ripple, $) {
             return this.outlet.html(data).show();
         }
         data = round_to(data, 4) || null;
-        if (currency === 'XRP') {
-            if (data) {
-                output = data + ' ' + currency;
-                if ($('#display-balance').val() === "Connecting...") {
-                    this.outlet.html(output).show();
+        if (currency) {
+            if (currency === 'XRP') {
+                if (data) {
+                    output = data + ' ' + currency;
+                    if ($('#display-balance').val() === "Connecting...") {
+                        this.outlet.html(output).show();
+                    } else {
+                        this.outlet.html(output).show();
+                    }
                 } else {
-                    this.outlet.html(output).show();
+                    this.outlet.html("Connecting...").show();
                 }
             } else {
-                this.outlet.html("Connecting...").show();
+                output = data + ' ' + currency;
+                this.coin_outlet.append(output);
             }
-        } else {
-            output = data + ' ' + currency;
-            this.coin_outlet.append(output);
         }
     };
     RippleRequest.prototype.order_book = function (selected, limit) {
@@ -787,7 +789,7 @@ var BRIDGE = (function (my, ripple, $) {
     /**
      * External event listener setup (e.g., Ripple network).
      */
-    Bridge.prototype.meter = function () {
+    Bridge.prototype.sync = function () {
         var rr = new RippleRequest(this.ripple_address);
         rr.balance();
     };
@@ -797,8 +799,8 @@ var BRIDGE = (function (my, ripple, $) {
      */
     Bridge.prototype.tweaks = function () {
         var self = this;
-        $("body").attr('style', 'none');
-        $("body").css('background-color', '#f8f8f8');
+        $("body").css('background-color', '#e9eaed');
+        // $('#wallet-block').height($('#tabs-block').height() - 50);
         $('#modal-ok-button').click(function (event) {
             event.preventDefault();
             $('#modal-ok-box').hide();
@@ -834,6 +836,7 @@ var BRIDGE = (function (my, ripple, $) {
     Bridge.prototype.new_wallet = function () {
         fresh_wallet = RippleWallet.generate();
         this.ripple_address = fresh_wallet.address;
+        $('#wallet-address').text(fresh_wallet.address);
         this.tx_params.address = fresh_wallet.address;
         // this.fund_wallet(fresh_wallet.address);
         return fresh_wallet;
@@ -877,6 +880,8 @@ var BRIDGE = (function (my, ripple, $) {
             rr2 = new RippleRequest(wallet.address);
             rr2.order_book();
             bridge.charts();
+            bridge.sync();
+            setTimeout(function () { bridge.sync(); }, 10000);
         });
     };
     /**
