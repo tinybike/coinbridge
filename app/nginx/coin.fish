@@ -1,7 +1,3 @@
-upstream backend {
-    server 127.0.0.1:9090;
-}
-
 server {
     listen              80;
     server_name         coin.fish;
@@ -21,7 +17,7 @@ server {
         proxy_set_header Host $http_host;
         proxy_set_header X-NginX-Proxy true;
 
-        proxy_pass http://backend/;
+        proxy_pass http://127.0.0.1:9090;
         proxy_redirect off;
 
         proxy_http_version 1.1;
