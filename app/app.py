@@ -17,7 +17,7 @@ from OpenSSL import rand
 from decimal import Decimal, getcontext, ROUND_HALF_EVEN
 from contextlib import contextmanager
 from tornado.ioloop import IOLoop
-from tornado.web import Application, RequestHandler, MissingArgumentError, StaticFileHandler, authenticated, asynchronous
+from tornado.web import Application, RequestHandler, StaticFileHandler, asynchronous
 from sockjs.tornado import SockJSRouter, SockJSConnection
 from jinja2 import FileSystemLoader, Environment
 try:
