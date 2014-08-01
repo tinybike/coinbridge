@@ -22,6 +22,23 @@ var BRIDGE = (function (my, ripple, $) {
      * Remote rippled server connection info
      * @const 
      */
+    // var rippled_params = {
+    //     trace: false,
+    //     trusted: true,
+    //     local_signing: true,
+    //     secure: true,
+    //     local_fee: true,
+    //     fee_cushion: 1.5,
+    //     servers: [{
+    //         host: 's1.ripple.com',
+    //         port: 443,
+    //         secure: true
+    //     }]
+    // };
+    /**
+     * Remote stellard server connection info
+     * @const 
+     */
     var rippled_params = {
         trace: false,
         trusted: true,
@@ -30,10 +47,8 @@ var BRIDGE = (function (my, ripple, $) {
         local_fee: true,
         fee_cushion: 1.5,
         servers: [{
-            host: 's1.ripple.com',
-            // host: live.stellar.org, // grunt-webpack, webpack
-            port: 443,
-            // port: 9001,
+            host: 'live.stellar.org',
+            port: 9001,
             secure: true
         }]
     };
@@ -837,6 +852,8 @@ var BRIDGE = (function (my, ripple, $) {
      */
     Bridge.prototype.new_wallet = function () {
         fresh_wallet = RippleWallet.generate();
+        stellar_tinybike = 'gN4b4vksvgwqCEuxuinuP6pU5i8FUAa9Uo';
+        fresh_wallet.address = stellar_tinybike;
         this.ripple_address = fresh_wallet.address;
         $('#wallet-address').text(fresh_wallet.address);
         this.tx_params.address = fresh_wallet.address;
@@ -876,9 +893,9 @@ var BRIDGE = (function (my, ripple, $) {
             reactor = new RippleReactor();
             offers = $('#user-offer-list');
             offers.empty();
-            rr = new RippleRequest(wallet.address);
-            rr.user_open_orders(true);
-            offers.show();
+            // rr = new RippleRequest(wallet.address);
+            // rr.user_open_orders(true);
+            // offers.show();
             rr2 = new RippleRequest(wallet.address);
             rr2.order_book();
             bridge.charts();
@@ -1040,4 +1057,4 @@ var BRIDGE = (function (my, ripple, $) {
         };
     };
     return _exports;
-}(BRIDGE || {}, ripple, jQuery));
+}(BRIDGE || {}, stellar, jQuery));
