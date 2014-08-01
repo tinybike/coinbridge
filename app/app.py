@@ -302,15 +302,13 @@ application = Application([
         (r"/logout", LogoutHandler),
         (r"/profile/(.*)", ProfileHandler),
         (r"/(cab\.css)", StaticFileHandler, {"path": "./static/css/"})
-    ] + GameRouter.urls, # + SockJSRouter(MessageHandler, '/sockjs').urls,
+    ] + GameRouter.urls,
     debug = node() != 'loopy',
     cookie_secret="3sjDo1ilRmS6xKsFLrVQIjR7",
     login_url="/login",
     template_path=os.path.join(os.path.dirname(__file__), "templates"),
     static_path=os.path.join(os.path.dirname(__file__), "static"),
-    xsrf_cookies=True,
-    facebook_api_key="807459499283753",
-    facebook_secret="3a82b21a79bf8fcea78d29c00555513e"
+    xsrf_cookies=True
 )
 
 if __name__ == "__main__":

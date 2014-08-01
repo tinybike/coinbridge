@@ -1,0 +1,139 @@
+<!doctype html>
+<!--[if IE 9]><html class="lt-ie10" lang="en" > <![endif]-->
+<html lang="en" data-useragent="Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.2; Trident/6.0)">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>crypto.cab</title>
+    <link rel="stylesheet" href="/static/css/foundation.css" />
+    <link rel="stylesheet" href="/static/css/cab.css" />
+    <link rel="stylesheet" type="text/css" href='//fonts.googleapis.com/css?family=Sunshiney|Lato:300|Open+Sans:300|Gochi+Hand' />
+    <link rel="shortcut icon" href="/static/favicon.ico" />
+    <script src="/static/js/vendor/modernizr.js"></script>
+    
+  </head>
+  {% block page %}{% endblock %}
+  <body>
+    <div id="fb-root"></div>
+    <div id="whole-body-wrapper">
+      {% include "navbar.html" %}
+        {% if login %}
+          <div class="sidebar">
+            <div class="row">
+              <div class="large-12 columns" id="wallet-block">
+                <ul id="wallet">
+                  <li id="wallet-header">wallet</li>
+                  <li id="DYF-balance"></li>
+                  <li id="BTC-balance"></li>
+                </ul>
+              </div>
+            </div>
+            <div id="friend-request-container">
+              <div id="friend-request-list-title">friend requests</div>
+              <ul id="friend-request-list"></ul>
+            </div>
+            <div id="friend-list-title">friends</div>
+            <ul id="friend-list"></ul>
+            <hr class="sidebar-divider" />
+            <div id="randoms-list-title">randoms</div>
+            <ul id="randoms-list"></ul>
+          </div>
+          <section id="main-block">
+            {% block body %}{% endblock %}
+            {% block lowerbody %}{% endblock %}
+            <div class="vertical-spacer-25"></div>
+          </section>
+        {% else %}
+          <section id="splash-block">
+          {% block splash %}{% endblock %}
+          <div class="row" style="margin-top: 60px">
+            <div class="large-12 columns">
+              <div class="large-6 columns">
+                <a href="/register" class="button alert expand">Register</a>
+              </div>
+              <div class="large-6 columns">
+                <a href="/login" class="button success expand">Login</a>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      </section>
+      <footer class="row" id="footer">
+        <div class="large-12 columns"><hr />
+            <div class="row">
+              <div class="large-6 columns">
+                <p>&copy; Copyright 2014 <a href="/index">crypto.cab</a>.</p>
+              </div>
+            </div>
+        </div>
+        <div style="clear: both;"></div>
+      </footer>
+    </div>
+    {% if registration_ok is defined %}
+      {% if registration_ok %}
+        <span id="startup" style="display:none">{{ registration_ok }}</span>
+        {% set registration_ok = None %}
+        <div id="registration-successful-lightbox" style="display:none">
+          <h3 id="see_id" style="float:left">Welcome, {{ username }}!</h3>
+          <div id="close_button">
+            <a href="#" class="close-link">
+              <img src="/static/img/close.png" alt="Close" width="35px" />
+            </a>
+          </div>
+          <p class="lightbox-paragraph">You've been awarded 100 free dyfs to get you started.  Guess whether coin prices will increase or decrease, and you can win more dyfs!</p>
+          <button class="close-link button small">Dive In</button>
+        </div>
+      {% endif %}
+    {% endif %}
+    <div id="modal-dynamic" class="reveal-modal small" data-reveal>
+      <h3 id="modal-header"></h3>
+      <div id="modal-body"></div>
+      <a class="close-reveal-modal">&#215;</a>
+      <div id="modal-ok-box"><button id="modal-ok-button" class="button small">Ok</button></div>
+    </div>
+    <script src="/static/js/vendor/jquery.js"></script>
+    <script src="/static/js/vendor/jquery-migrate-1.2.1.min.js"></script>
+    <script src="/static/js/vendor/jquery.lightbox_me.min.js"></script>
+    <script src="/static/js/vendor/underscore-min.js"></script>
+    <script src="/static/js/moment.min.js"></script>
+    <script src="/static/js/sockjs.min.js"></script>
+    <script src="/static/js/vendor/highstock.src.js"></script>
+    <script src="/static/js/vendor/exporting.src.js"></script>
+    <script src="/static/js/ripple-0.7.35.js"></script>
+    <script src="/static/js/cab.js"></script>
+    <script src="/static/js/foundation/foundation.js"></script>
+    <script src="/static/js/foundation/foundation.dropdown.js"></script>
+    <script src="/static/js/foundation/foundation.topbar.js"></script>
+    <script src="/static/js/foundation/foundation.tab.js"></script>
+    <script src="/static/js/foundation/foundation.reveal.js"></script>
+    <script>
+      // Load initial server variables
+      window.sid = "{{ sid }}";
+      window.login = false;
+      window.admin = false;
+      {% if login is defined %}
+        {% if login %}
+          {% if logout is defined %}
+            window.login = false;
+            window.admin = false;
+            if (window.user_id) {
+              delete window.user_id;
+            }
+            if (window.username) {
+              delete window.username;
+            }
+          {% else %}
+            window.login = true;
+            window.admin = "{{ admin }}" === "True";
+            window.user_id = {{ user_id }};
+            window.username = "{{ username }}";
+          {% endif %}
+        {% endif %}
+      {% endif %}
+      CRYPTOCAB.init();
+      $(document).foundation();
+      var doc = document.documentElement;
+      doc.setAttribute('data-useragent', navigator.userAgent);
+    </script>
+  </body>
+</html>

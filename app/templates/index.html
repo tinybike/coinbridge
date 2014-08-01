@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+{% block page %}<script>window.page = "index";</script>{% endblock %}
+{% block body %}
+  <div class="row">
+    <div class="large-12 columns">
+      <div class="large-12 columns">
+        {% include "tabs.html" %}
+      </div>
+    </div>
+  </div>
+{% endblock %}
+{% block splash %}
+  <div id="splash-screen">
+    <div id="splash">
+      <span><h1>crypto.cab</h1></span>
+    </div>
+  </div>
+{% endblock %}
+{% block lowerbody %}
+  <div class="row full-width">
+    <div class="large-12 columns">
+      <div id="chat-box">
+        <div id="babble">Welcome to crypto.cab!</div>
+      </div>
+      <div class="vertical-spacer-25"></div>
+      <form id="broadcast" method="POST" action='#'>
+        <input type="text" name="broadcast_data" id="broadcast_data" placeholder="Say something!" />
+        <input type="submit" value="Babble" class="right" />
+      </form>
+    </div>
+    <div class="large-6 columns end">
+      <div id="chart-container">
+        <div id="loading-circle">
+          <img src="/static/img/loading.gif" id="loading" />
+          <br /><br />
+          Loading charts...
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
