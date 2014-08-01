@@ -242,7 +242,7 @@ application = Application([
 
 if __name__ == "__main__":
     if node() == 'loopy':
-        application.listen(8080, "0.0.0.0")
+        application.listen(9090, "0.0.0.0")
     else:
         application.listen(5000, no_keep_alive=True)
     io_loop = IOLoop.instance()
