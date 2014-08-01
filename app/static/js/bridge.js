@@ -744,11 +744,11 @@ var BRIDGE = (function (my, ripple, stellar, $) {
             if (err) {
                 if (err.error == "remoteError") {
                     self.xrp = null;
-                    self.display_balance("0");
+                    self.display_balance(0, 'STR');
                 }
             } else {
                 self.xrp = parseFloat(res.account_data.Balance) / Math.pow(10,6);
-                self.display_balance(self.xrp, 'XRP');
+                self.display_balance(self.xrp, 'STR');
             }
         });
     };
@@ -842,7 +842,7 @@ var BRIDGE = (function (my, ripple, stellar, $) {
         }
         data = round_to(data, 4) || null;
         if (currency) {
-            if (currency === 'XRP') {
+            if (currency === 'STR') {
                 if (data) {
                     output = data + ' ' + currency;
                     if ($('#display-stellar-balance').val() === "Connecting...") {
@@ -920,23 +920,23 @@ var BRIDGE = (function (my, ripple, stellar, $) {
         if (offers && offers.length) {
             book = [];
             if (typeof offers[0].TakerPays == 'string') {
-                pays_currency = 'XRP';    
+                pays_currency = 'STR';    
             } else {
                 pays_currency = offers[0].TakerPays.currency;
             }
             if (typeof offers[0].TakerGets == 'string') {
-                gets_currency = 'XRP';    
+                gets_currency = 'STR';    
             } else {
                 gets_currency = offers[0].TakerGets.currency;
             }
             limit = Math.min(limit, offers.length);
             for (var i = 0; i < limit; ++i) {
-                if (pays_currency === 'XRP') {
+                if (pays_currency === 'STR') {
                     pays = undropify(offers[i].TakerPays, 5);
                 } else {
                     pays = Number(round_to(offers[i].TakerPays.value, 5));    
                 }
-                if (gets_currency === 'XRP') {
+                if (gets_currency === 'STR') {
                     gets = undropify(offers[i].TakerGets, 5);
                 } else {
                     gets = Number(round_to(offers[i].TakerGets.value, 5));    
@@ -999,7 +999,7 @@ var BRIDGE = (function (my, ripple, stellar, $) {
     };
     StellarAssembleTx.prototype.payment = function () {
         // ./rippled <secret> '{"TransactionType":"Payment","Account":"<address>","Amount":"<drops>","Destination":"<account>" }'
-        if (this.params.details.currency == 'XRP') {
+        if (this.params.details.currency == 'STR') {
             this.params.details.issuer = '';
         }
         this.tx.payment({
@@ -1231,7 +1231,7 @@ var BRIDGE = (function (my, ripple, stellar, $) {
         return this;
     };
     /**
-     * Create and fund the XRP reserve of new Ripple wallets.
+     * Create new Ripple wallets.
      */
     Bridge.prototype.create_ripple_wallet = function () {
         fresh_wallet = RippleWallet.generate();
@@ -1242,7 +1242,7 @@ var BRIDGE = (function (my, ripple, stellar, $) {
         return fresh_wallet;
     };
     /**
-     * Create and fund the STR reserve of new Stellar wallets.
+     * Create new Stellar wallets.
      */
     Bridge.prototype.create_stellar_wallet = function () {
         fresh_wallet = RippleWallet.generate();
