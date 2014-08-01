@@ -1280,8 +1280,8 @@ var BRIDGE = (function (my, ripple, stellar, $) {
         $(document).ready(function () {
             var rreactor, sreactor, offers, rr, rr2, sr, sr2;
             window.bridge = new Bridge();
-            window.socket = new sockjs('bridge', true);
-            socket.connect();
+            // window.socket = new sockjs('bridge', true);
+            // socket.connect();
             bridge.tweaks();
             bridge.create_ripple_wallet();
             bridge.create_stellar_wallet();
