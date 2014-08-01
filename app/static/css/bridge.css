@@ -289,7 +289,10 @@
     font-size: 12pt;
     text-align: center;
 }
-#wallet-address {
+#ripple-wallet-address {
+    font-size: 10pt;
+}
+#stellar-wallet-address {
     font-size: 10pt;
 }
 #wallet-block table {
@@ -376,15 +379,26 @@
     width: 50px;
 }
 
-#display-orders {
+#display-ripple-orders {
     height: 300px;
     overflow-y: auto;
     margin-bottom: 10px;
 }
-#display-orders table {
+#display-ripple-orders table {
     width: 100%;
 }
-#display-orders th {
+#display-ripple-orders th {
+    text-align: left;
+}
+#display-stellar-orders {
+    height: 300px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+}
+#display-stellar-orders table {
+    width: 100%;
+}
+#display-stellar-orders th {
     text-align: left;
 }
 
