@@ -19,25 +19,16 @@
         <section id="main-block">
           {% block body %}{% endblock %}
           {% block lowerbody %}{% endblock %}
-          <div class="vertical-spacer-25"></div>
         </section>
       </section>
-      <footer class="row" id="footer">
-        <div class="large-12 columns"><hr />
-            <div class="row">
-              <div class="large-6 columns">
-                <p>&copy; Copyright 2014 <a href="/index">CoinBridge</a>.</p>
-              </div>
-            </div>
-        </div>
-        <div style="clear: both;"></div>
-      </footer>
     </div>
     <div id="modal-dynamic" class="reveal-modal small" data-reveal>
       <h3 id="modal-header"></h3>
       <div id="modal-body"></div>
       <a class="close-reveal-modal">&#215;</a>
-      <div id="modal-ok-box"><button id="modal-ok-button" class="button small">Ok</button></div>
+      <div id="modal-ok-box">
+        <button id="modal-ok-button" class="button small">Ok</button>
+      </div>
     </div>
     <script src="/static/js/vendor/jquery.js"></script>
     <script src="/static/js/vendor/jquery-migrate-1.2.1.min.js"></script>
@@ -47,7 +38,7 @@
     <script src="/static/js/sockjs.min.js"></script>
     <script src="/static/js/vendor/highstock.src.js"></script>
     <script src="/static/js/vendor/exporting.src.js"></script>
-    <script src="/static/js/ripple-0.7.35-min.js"></script>
+    <script src="/static/js/ripple-0.7.35.js"></script>
     <script src="/static/js/bridge.js"></script>
     <script src="/static/js/foundation/foundation.js"></script>
     <script src="/static/js/foundation/foundation.dropdown.js"></script>
@@ -56,6 +47,7 @@
     <script src="/static/js/foundation/foundation.reveal.js"></script>
     <script>
       window.sid = "{{ sid }}";
+      window.wallet = {};
       BRIDGE.init();
       $(document).foundation();
       var doc = document.documentElement;

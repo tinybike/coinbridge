@@ -125,7 +125,7 @@ class IndexHandler(RequestHandler):
 # Sockets #
 ###########
 
-class GameConnection(SockJSConnection):
+class BridgeConnection(SockJSConnection):
     
     players = set()    
 
@@ -152,71 +152,6 @@ class GameConnection(SockJSConnection):
                     self.populate_chatbox(sid)
                 elif name == "userlist":
                     self.userlist(sid)
-
-    def facebook_login(self, data):
-        user_id = None
-        register = False
-        select_query = "SELECT count(*) FROM users WHERE user_fb_id = %s"
-        with cursor() as cur:
-            cur.execute(select_query, (data["uid"],))
-            if cur.fetchone()[0] == 0:
-                register = True
-        if register:
-            query = """INSERT INTO users
-                (username, password, firstname, lastname,
-                gender, location, facebook,
-                user_fb_id, user_fb_name,
-                profile_pic, biography)
-                VALUES
-                (%(username)s, %(password)s, %(firstname)s, %(lastname)s,
-                %(gender)s, %(location)s, %(facebook)s,
-                %(user_fb_id)s, %(user_fb_name)s,
-                %(profile_pic)s, %(biography)s)
-                RETURNING user_id"""
-            gender = 'M' if data['gender'] == 'male' else 'F'
-            username = data['username']
-            parameters = {
-                'username': username,
-                'password': data['token'],
-                'firstname': data['first_name'],
-                'lastname': data['last_name'],
-                'gender': gender,
-                'location': data['location_name'],
-                'facebook': data['link'],
-                'user_fb_id': data['uid'],
-                'user_fb_name': data['username'],
-                'profile_pic': data['uid'] + ".jpg",
-                'biography': data['bio'],
-            }
-            response = requests.get(data['picture'])
-            if response.status_code == 200:
-                uploadpath = os.path.join(os.path.abspath(os.path.dirname(__file__)),
-                                          "static", "uploads", data['uid'] + ".jpg")
-                with open(uploadpath, 'w') as upfile:
-                    upfile.write(response.content)
-            with cursor() as cur:
-                cur.execute(query, parameters)
-                if cur.rowcount:
-                    user_id = cur.fetchone()[0]
-        else:
-            query = "SELECT user_id, username FROM users WHERE user_fb_id = %s"
-            with cursor() as cur:
-                cur.execute(query, (data["uid"],))
-                user_id, username = cur.fetchone()
-        if user_id is not None:
-            login_user(data['sid'], user_id, username, remember=False)
-            self.emit("facebook-login-response", {
-                "success": True,
-                "sid": data["sid"],
-                "user_id": user_id,
-                "fb_user_id": data["uid"],
-                "token": data['token'],
-            })
-        else:
-            self.emit("facebook-login-response", {
-                "success": False,
-                "sid": data["sid"],
-            })
 
     def emit(self, name, data, broadcast=False, types=None):
         """Socket.io-like emit function for SockJS"""
@@ -246,7 +181,6 @@ class GameConnection(SockJSConnection):
         })
 
     def friend_request(self, data):
-        """Make a new friend request (called by the requester)"""
         user_id = redis.get(data['sid'])
         username = redis.hget(user_id, 'username')
         self.emit('friend-requested', {
@@ -292,12 +226,12 @@ def currency_codes(currency, convert_from="ticker", convert_to="name"):
     print "Warning: could not convert from", currency
     return None
 
-GameRouter = SockJSRouter(GameConnection, '/bet')
+BridgeRouter = SockJSRouter(BridgeConnection, '/bridge')
 
 application = Application([
         (r"/", IndexHandler),
         (r"/(bridge\.css)", StaticFileHandler, {"path": "./static/css/"})
-    ] + GameRouter.urls,
+    ] + BridgeRouter.urls,
     debug = node() != 'loopy',
     cookie_secret="3sjDo1ilRmS6xKsFLrVQIjR7",
     login_url="/login",

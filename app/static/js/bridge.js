@@ -2,7 +2,7 @@
  * @fileoverview CoinBridge web app front-end core
  * @author jack@tinybike.net
  */
-var BRIDGE = (function (my, $) {
+var BRIDGE = (function (my, ripple, $) {
     /**
      * Module pattern: exports from BRIDGE
      */
@@ -160,7 +160,7 @@ var BRIDGE = (function (my, $) {
         if (this._sockjs.readyState != SockJS.OPEN) {
             setTimeout(function () { _this.readycheck(); }, this.timeout);
         } else {
-            cab.init_sockets();
+            bridge.init_sockets();
         }
     };
     /**
@@ -190,6 +190,75 @@ var BRIDGE = (function (my, $) {
             port: 443,
             secure: true
         }]
+    };
+    /**
+     * Ripple Gateways "certified": http://www.xrpga.org/gateways.html
+     * Issuing address & other info obtained from:
+     * https://ripple.com/forum/viewforum.php?f=14
+     * https://xrptalk.org/topic/272-help-to-identify-money-issuers-inside-the-network/
+     * @const 
+     */ 
+    var gateways = {
+        CryptoCab: {
+            address: "rMvQCheixifmCK6GPFGafRGu17Hu4y8cLS",
+            certified: true
+        },
+        Bitstamp: {
+            address: "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
+            certified: true
+        },
+        Justcoin: {
+            address: "rJHygWcTLVpSXkowott6kzgZU6viQSVYM1",
+            certified: true
+        },
+        SnapSwap: {
+            address: "rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q",
+            certified: true
+        },
+        rippleCN: {
+            address: "rnuF96W4SZoCJmbHYBFoJZpR8eCaxNvekK",
+            certified: true
+        },
+        RippleChina: {
+            address: "razqQKzJRdB4UxFPWf5NEpEG3WMkmwgcXA",
+            certified: true
+        },
+        TheRockTrading: {
+            address: "rLEsXccBGNR3UPuPu2hUXPjziKC3qKSBun",
+            certified: true
+        },
+        rippleSingapore: {
+            address: "r9Dr5xwkeLegBeXq6ujinjSBLQzQ1zQGjH",
+            certified: true
+        },
+        btc2ripple: {
+            address: "rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q",
+            certified: true
+        },
+        Coinex: {
+            address: "rsP3mgGb2tcYUrxiLFiHJiQXhsziegtwBc",
+            certified: true
+        },
+        DividendRippler: {
+            address: "rfYv1TXnwgDDK4WQNbFALykYuEBnrR4pDX",
+            certified: false
+        },
+        RippleIsrael: {
+            address: "rNPRNzBB92BVpAhhZr4iXDTveCgV5Pofm9",
+            certified: false
+        },
+        Peercover: {
+            address: "ra9eZxMbJrUcgV8ui7aPc161FgrqWScQxV",
+            certified: false
+        },
+        RippleUnion: {
+            address: "r3ADD8kXSUKHd6zTCKfnKT3zV9EZHjzp1S",
+            certified: false
+        },
+        WisePass: {
+            address: "rPDXxSZcuVL3ZWoyU82bcde3zwvmShkRyF",
+            certified: false
+        }
     };
     /** @const */
     var shared = {
@@ -709,15 +778,24 @@ var BRIDGE = (function (my, $) {
      *
      * @constructor
      */
-    function Cab() {
+    function Bridge() {
         var self = this;
         this.digits = 8;
+        this.ripple_address = $('#wallet-address').text() || '';
+        this.tx_params = wallet;
     }
+    /**
+     * External event listener setup (e.g., Ripple network).
+     */
+    Bridge.prototype.meter = function () {
+        var rr = new RippleRequest(this.ripple_address);
+        rr.balance();
+    };
     /**
      * DOM manipulation, visual tweaks, and event handlers that do not
      * involve websockets.
      */
-    Cab.prototype.tweaks = function () {
+    Bridge.prototype.tweaks = function () {
         var self = this;
         $("body").attr('style', 'none');
         $("body").css('background-color', '#f8f8f8');
@@ -732,36 +810,73 @@ var BRIDGE = (function (my, $) {
      * Outgoing websocket signals.  Event handlers that send messages to
      * the server via websocket as part of their callback are registered here.
      */
-    Cab.prototype.exhaust = function () {
+    Bridge.prototype.exhaust = function () {
         var self = this;
         return this;
     };
     /**
      * Listeners for incoming websocket signals.
      */
-    Cab.prototype.intake = function () {
+    Bridge.prototype.intake = function () {
         var self = this;
-        socket.on('notify', function (res) {
-            $('#live-feed').text(res.feed);
-            self.sync();
-            var clear_feed = setTimeout(function () {
-                $('#live-feed').hide();
-            }, 10000);
-        });
+        // socket.on('notify', function (res) {
+        //     $('#live-feed').text(res.feed);
+        //     self.sync();
+        //     var clear_feed = setTimeout(function () {
+        //         $('#live-feed').hide();
+        //     }, 10000);
+        // });
         return this;
+    };
+    /**
+     * Create and fund the XRP reserve of new Ripple wallets.
+     */
+    Bridge.prototype.new_wallet = function () {
+        fresh_wallet = RippleWallet.generate();
+        this.ripple_address = fresh_wallet.address;
+        this.tx_params.address = fresh_wallet.address;
+        // this.fund_wallet(fresh_wallet.address);
+        return fresh_wallet;
+    };
+    /** @param {string} address */
+    Bridge.prototype.fund_wallet = function (address) {
+        // Fund reserve (20 XRP) for new Ripple wallets
+        var welfare_tx_params = welfare;
+        welfare_tx_params.details.to = address;
+        var remote = new ripple.Remote(rippled_params);
+        remote.connect(function () {
+            remote.set_secret(welfare.from, welfare.secret);
+            var assembly = new AssembleTx(remote.transaction(), welfare_tx_params);
+            assembly.build();
+            assembly.submit();
+        });
+    };
+    Bridge.prototype.charts = function () {
+
     };
     /**
      * Set up socket listeners on ready signal.
      */
-    Cab.prototype.init_sockets = function () {
+    Bridge.prototype.init_sockets = function () {
         this.intake().exhaust();
     };
     _exports.init = function () {
         $(document).ready(function () {
-            cab = new Cab();
-            window.socket = new sockjs('bet', true);
+            var reactor, offers, rr, rr2;
+            window.bridge = new Bridge();
+            window.socket = new sockjs('bridge', true);
             socket.connect();
-            cab.tweaks();
+            bridge.tweaks();
+            bridge.new_wallet();
+            reactor = new RippleReactor();
+            offers = $('#user-offer-list');
+            offers.empty();
+            rr = new RippleRequest(wallet.address);
+            rr.user_open_orders(true);
+            offers.show();
+            rr2 = new RippleRequest(wallet.address);
+            rr2.order_book();
+            bridge.charts();
         });
     };
     /**
@@ -918,4 +1033,4 @@ var BRIDGE = (function (my, $) {
         };
     };
     return _exports;
-}(BRIDGE || {}, jQuery));
+}(BRIDGE || {}, ripple, jQuery));

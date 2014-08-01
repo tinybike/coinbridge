@@ -2,7 +2,7 @@
   <nav class="top-bar" data-topbar>
     <ul class="title-area">
       <li class="name">
-        <h1><a href="/" id="title-text">crypto.cab</a></h1>
+        <h1><a href="/" id="title-text">CoinBridge</a></h1>
       </li>
       <li class="toggle-topbar menu-icon"><a href="#"><span>menu</span></a></li>
     </ul>
@@ -12,39 +12,11 @@
         <li><span id="live-feed"></span></li>
       </ul>
       <ul class="right">
-        {% if login %}
-          {% if admin %}
-            <li class="has-dropdown">
-              <a href="#">Admin</a>
-              <ul class="dropdown">
-                <li id="admin-end-round">
-                  <a href="#">End Betting Round</a>
-                </li>
-              </ul>
-            </li>
-          {% endif %}
-          <li>
-            <a href="/">Home</a>
-          </li>
-          <li class="divider"></li>
-          <li class="has-dropdown">
-            <a href="/profile/{{ username }}">{{ username }}</a>
-            <ul class="dropdown">
-              <li>
-                <a href="/profile/{{ username }}">Profile</a>
-              </li>
-              <li class="divider"></li>
-              <li>
-                <a href="/logout">Logout</a>
-              </li>
-            </ul>
-          </li>
-        {% else %}
-          <li class="divider"></li>
-          <li><a href="/register">Register</a></li>
-          <li class="divider"></li>
-          <li><a href="/login">Login</a></li>
-        {% endif %}
+        <li class="divider"></li>
+        <li>
+          <a href="/">Home</a>
+        </li>
+        <li class="divider"></li>
       </ul>
     </section>
   </nav>
