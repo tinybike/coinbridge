@@ -19,6 +19,99 @@ var BRIDGE = (function (my, ripple, $) {
     };
     var reconnected = 0;
     /**
+     * Remote rippled server connection info
+     * @const 
+     */
+    var rippled_params = {
+        trace: false,
+        trusted: true,
+        local_signing: true,
+        secure: true,
+        local_fee: true,
+        fee_cushion: 1.5,
+        servers: [{
+            host: 's1.ripple.com',
+            // host: live.stellar.org, // grunt-webpack, webpack
+            port: 443,
+            // port: 9001,
+            secure: true
+        }]
+    };
+    /**
+     * Ripple Gateways "certified": http://www.xrpga.org/gateways.html
+     * Issuing address & other info obtained from:
+     * https://ripple.com/forum/viewforum.php?f=14
+     * https://xrptalk.org/topic/272-help-to-identify-money-issuers-inside-the-network/
+     * @const 
+     */ 
+    var gateways = {
+        CryptoCab: {
+            address: "rMvQCheixifmCK6GPFGafRGu17Hu4y8cLS",
+            certified: true
+        },
+        Bitstamp: {
+            address: "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
+            certified: true
+        },
+        Justcoin: {
+            address: "rJHygWcTLVpSXkowott6kzgZU6viQSVYM1",
+            certified: true
+        },
+        SnapSwap: {
+            address: "rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q",
+            certified: true
+        },
+        rippleCN: {
+            address: "rnuF96W4SZoCJmbHYBFoJZpR8eCaxNvekK",
+            certified: true
+        },
+        RippleChina: {
+            address: "razqQKzJRdB4UxFPWf5NEpEG3WMkmwgcXA",
+            certified: true
+        },
+        TheRockTrading: {
+            address: "rLEsXccBGNR3UPuPu2hUXPjziKC3qKSBun",
+            certified: true
+        },
+        rippleSingapore: {
+            address: "r9Dr5xwkeLegBeXq6ujinjSBLQzQ1zQGjH",
+            certified: true
+        },
+        btc2ripple: {
+            address: "rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q",
+            certified: true
+        },
+        Coinex: {
+            address: "rsP3mgGb2tcYUrxiLFiHJiQXhsziegtwBc",
+            certified: true
+        },
+        DividendRippler: {
+            address: "rfYv1TXnwgDDK4WQNbFALykYuEBnrR4pDX",
+            certified: false
+        },
+        RippleIsrael: {
+            address: "rNPRNzBB92BVpAhhZr4iXDTveCgV5Pofm9",
+            certified: false
+        },
+        Peercover: {
+            address: "ra9eZxMbJrUcgV8ui7aPc161FgrqWScQxV",
+            certified: false
+        },
+        RippleUnion: {
+            address: "r3ADD8kXSUKHd6zTCKfnKT3zV9EZHjzp1S",
+            certified: false
+        },
+        WisePass: {
+            address: "rPDXxSZcuVL3ZWoyU82bcde3zwvmShkRyF",
+            certified: false
+        }
+    };
+    /** @const */
+    var shared = {
+        from: "rMvQCheixifmCK6GPFGafRGu17Hu4y8cLS",
+        secret: "shZy5HgDcfMY9v1embCkrmU5jWH9y"
+    };
+    /**
      * SockJS wrapper with some semantic sugar to make it look more like
      * socket.io. Supports socket.emit and socket.on.
      * @param namespace {String | null} Route/namespace to link with
@@ -173,97 +266,6 @@ var BRIDGE = (function (my, ripple, $) {
         }
         this._socket.close();
         this._socket = null;
-    };
-    /**
-     * Remote rippled server connection info
-     * @const 
-     */
-    var rippled_params = {
-        trace: false,
-        trusted: true,
-        local_signing: true,
-        secure: true,
-        local_fee: true,
-        fee_cushion: 1.5,
-        servers: [{
-            host: 's1.ripple.com',
-            port: 443,
-            secure: true
-        }]
-    };
-    /**
-     * Ripple Gateways "certified": http://www.xrpga.org/gateways.html
-     * Issuing address & other info obtained from:
-     * https://ripple.com/forum/viewforum.php?f=14
-     * https://xrptalk.org/topic/272-help-to-identify-money-issuers-inside-the-network/
-     * @const 
-     */ 
-    var gateways = {
-        CryptoCab: {
-            address: "rMvQCheixifmCK6GPFGafRGu17Hu4y8cLS",
-            certified: true
-        },
-        Bitstamp: {
-            address: "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
-            certified: true
-        },
-        Justcoin: {
-            address: "rJHygWcTLVpSXkowott6kzgZU6viQSVYM1",
-            certified: true
-        },
-        SnapSwap: {
-            address: "rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q",
-            certified: true
-        },
-        rippleCN: {
-            address: "rnuF96W4SZoCJmbHYBFoJZpR8eCaxNvekK",
-            certified: true
-        },
-        RippleChina: {
-            address: "razqQKzJRdB4UxFPWf5NEpEG3WMkmwgcXA",
-            certified: true
-        },
-        TheRockTrading: {
-            address: "rLEsXccBGNR3UPuPu2hUXPjziKC3qKSBun",
-            certified: true
-        },
-        rippleSingapore: {
-            address: "r9Dr5xwkeLegBeXq6ujinjSBLQzQ1zQGjH",
-            certified: true
-        },
-        btc2ripple: {
-            address: "rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q",
-            certified: true
-        },
-        Coinex: {
-            address: "rsP3mgGb2tcYUrxiLFiHJiQXhsziegtwBc",
-            certified: true
-        },
-        DividendRippler: {
-            address: "rfYv1TXnwgDDK4WQNbFALykYuEBnrR4pDX",
-            certified: false
-        },
-        RippleIsrael: {
-            address: "rNPRNzBB92BVpAhhZr4iXDTveCgV5Pofm9",
-            certified: false
-        },
-        Peercover: {
-            address: "ra9eZxMbJrUcgV8ui7aPc161FgrqWScQxV",
-            certified: false
-        },
-        RippleUnion: {
-            address: "r3ADD8kXSUKHd6zTCKfnKT3zV9EZHjzp1S",
-            certified: false
-        },
-        WisePass: {
-            address: "rPDXxSZcuVL3ZWoyU82bcde3zwvmShkRyF",
-            certified: false
-        }
-    };
-    /** @const */
-    var shared = {
-        from: "rMvQCheixifmCK6GPFGafRGu17Hu4y8cLS",
-        secret: "shZy5HgDcfMY9v1embCkrmU5jWH9y"
     };
     /**
      * Listen on the Ripple network for transactions.
