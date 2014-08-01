@@ -3,10 +3,10 @@
 CoinBridge minimal web app
 @author jack@tinybike.net
 """
+from __future__ import division
 import sys
 import cdecimal
 sys.modules["decimal"] = cdecimal
-from __future__ import division
 import os
 import json
 import datetime
@@ -28,10 +28,13 @@ except:
     import psycopg2 as db
     import psycopg2.extensions as ext
     from psycopg2.extras import RealDictCursor
+from redis import StrictRedis
 from bridge import Bridge
 
-import tornadoredis
-import tornadoredis.pubsub
+# import tornadoredis
+# import tornadoredis.pubsub
+
+redis = StrictRedis()
 
 loader = FileSystemLoader(searchpath="templates/")
 env = Environment(loader=loader)
@@ -75,7 +78,9 @@ def cursor(cursor_factory=False):
 # Routes #
 ##########
 
-class BaseHandler(RequestHandler):
+class IndexHandler(RequestHandler):
+
+    template = env.get_template("index.html")
 
     def get(self):
         env.globals['xsrf_form_html'] = self.xsrf_form_html
@@ -114,11 +119,6 @@ class BaseHandler(RequestHandler):
 
     def get_user_id(self):
         return self.get_secure_cookie("user_id")
-
-
-class IndexHandler(BaseHandler):
-    
-    template = env.get_template("index.html")
 
 
 ###########
@@ -296,12 +296,7 @@ GameRouter = SockJSRouter(GameConnection, '/bet')
 
 application = Application([
         (r"/", IndexHandler),
-        (r"/register", RegisterHandler),
-        (r"/login", LoginHandler),
-        (r"/auth", AuthHandler),
-        (r"/logout", LogoutHandler),
-        (r"/profile/(.*)", ProfileHandler),
-        (r"/(cab\.css)", StaticFileHandler, {"path": "./static/css/"})
+        (r"/(bridge\.css)", StaticFileHandler, {"path": "./static/css/"})
     ] + GameRouter.urls,
     debug = node() != 'loopy',
     cookie_secret="3sjDo1ilRmS6xKsFLrVQIjR7",
@@ -317,6 +312,4 @@ if __name__ == "__main__":
     else:
         application.listen(5000, no_keep_alive=True)
     io_loop = IOLoop.instance()
-    io_loop.add_handler(lconn.fileno(), receive, io_loop.READ)
-    listen("game")
     io_loop.start()

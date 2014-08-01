@@ -754,14 +754,14 @@ var BRIDGE = (function (my, $) {
      * Set up socket listeners on ready signal.
      */
     Cab.prototype.init_sockets = function () {
-        this.intake().exhaust().charts();
+        this.intake().exhaust();
     };
     _exports.init = function () {
         $(document).ready(function () {
             cab = new Cab();
             window.socket = new sockjs('bet', true);
             socket.connect();
-            if (login) cab.tweaks();
+            cab.tweaks();
         });
     };
     /**
