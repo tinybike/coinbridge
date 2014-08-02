@@ -1,3 +1,5 @@
+from psycopg2cffi import compat
+compat.register()
 from sqlalchemy import Column, Integer, String, Numeric, DateTime, Boolean,\
                        Table, Text, Float, create_engine, func
 from sqlalchemy.ext.declarative import declarative_base
@@ -43,15 +45,11 @@ def init():
     engine, session = start_session(get_engine=True)
 
 if __name__ == "__main__":
-    resp = raw_input(
-        "WARNING: Deleting all transactions. Are you sure? [y/N] "
-    )
-    if resp.lower() == 'y':
-        engine = create_engine(config.POSTGRES["urlstring"],
-                               isolation_level="SERIALIZABLE",
-                               echo=False)
-        meta = MetaData()
-        meta.reflect(bind=engine)
-        for table in reversed(meta.sorted_tables):
-            engine.execute(table.delete())
-        Base.metadata.create_all(engine)
+    engine = create_engine(config.POSTGRES["urlstring"],
+                           isolation_level="SERIALIZABLE",
+                           echo=False)
+    meta = MetaData()
+    meta.reflect(bind=engine)
+    for table in reversed(meta.sorted_tables):
+        engine.execute(table.delete())
+    Base.metadata.create_all(engine)

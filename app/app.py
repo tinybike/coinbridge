@@ -4,9 +4,14 @@ CoinBridge minimal web app
 @author jack@tinybike.net
 """
 from __future__ import division
+from psycopg2cffi import compat
+compat.register()
 import sys
-import cdecimal
-sys.modules["decimal"] = cdecimal
+try:
+    import cdecimal
+    sys.modules["decimal"] = cdecimal
+except:
+    pass
 import os
 import json
 import datetime
