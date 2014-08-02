@@ -20,11 +20,11 @@ Set up `pgpass` file so transaction confirmations can be autologged to Postgres 
 
 Set environment variables:
     
-    $ echo "export BRIDGE=/path/to/coinbridge/bridge" >> ~/.profile
+    $ echo "export BRIDGE=/path/to/coinbridge" >> ~/.profile
     $ echo "export PGPASSFILE=$HOME/.pgpass" >> ~/.profile
     $ source ~/.profile
 
 Add walletnotify to Bitcoin's config file (`jq` used for shell transaction parsing):
     
     $ apt-get install jq
-    $ echo "walletnotify=$BRIDGE/bitcoin-notify %s" >> ~/.bitcoin/bitcoin.conf
+    $ echo "walletnotify=$BRIDGE/bridge/bitcoin-notify %s" >> ~/.bitcoin/bitcoin.conf

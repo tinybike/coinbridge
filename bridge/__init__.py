@@ -1,6 +1,9 @@
-import sys
-import cdecimal
-sys.modules["decimal"] = cdecimal
+try:
+    import sys
+    import cdecimal
+    sys.modules["decimal"] = cdecimal
+except:
+    pass
 
 __title__       =       "CoinBridge"
 __version__     =       "0.0.1"

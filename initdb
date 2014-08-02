@@ -1,0 +1,79 @@
+#!/bin/bash
+trap "exit" INT
+OPTIND=1
+resetuser=0
+quiet=0
+
+while getopts "qu" opt; do
+    case "$opt" in
+    q)  quiet=1
+        ;;
+    u)  resetuser=1
+        ;;
+    esac
+done
+
+shift $((OPTIND-1))
+[ "$1" = "--" ] && shift
+
+echo "Dumping local coinbridge database to $BRIDGE/db..."
+rm -f $BRIDGE/db/coinbridge_local.db
+pg_dump -Ucoinbridge -hlocalhost coinbridge -f $BRIDGE/db/coinbridge_local.db
+
+echo "Compressing..."
+rm -f $BRIDGE/db/coinbridge_local.db.gz
+gzip -f $BRIDGE/db/coinbridge_local.db
+echo "Database dump ok."
+
+sudo service postgresql restart
+
+echo "Reset database:"
+
+if [ $resetuser -eq 1 ]; then
+    echo "- Drop user coinbridge"
+    sudo -u postgres dropuser coinbridge &> /dev/null
+    sleep 1
+
+    echo "- Create user coinbridge"
+    sudo -u postgres createuser -P -D -R -S coinbridge &> /dev/null
+    sleep 1
+fi
+
+echo " - Drop and create database coinbridge"
+sudo -i -u postgres &> /dev/null <<'POSTGRES'
+dropdb coinbridge &> /dev/null
+createdb -E SQL_ASCII -T template0 coinbridge &> /dev/null
+POSTGRES
+
+# echo " - Set up dblink extension"
+# sudo -u postgres psql &> /dev/null <<'PSQL'
+# \c coinbridge
+# CREATE EXTENSION dblink;
+# GRANT EXECUTE ON FUNCTION dblink_connect_u(text) TO coinbridge;
+# GRANT EXECUTE ON FUNCTION dblink_connect_u(text,text) TO coinbridge;
+# PSQL
+
+echo " - SQLAlchemy create_all"
+python $BRIDGE/db.py
+# psql -Ucoinbridge -hlocalhost -dcoinbridge -q -f $BRIDGE/app/sql/tables.sql &> /dev/null
+
+# echo " - Installing functions"
+# psql -Ucoinbridge -hlocalhost -dcoinbridge -q -f $BRIDGE/app/sql/functions.sql &> /dev/null
+
+# echo " - Populating tables"
+# psql -Ucoinbridge -hlocalhost -dcoinbridge -q -f $BRIDGE/app/sql/inserts.sql &> /dev/null
+
+echo " - Reset Redis"
+if [ "$HOSTNAME" = loopy ]; then
+    redis-cli &> /dev/null <<'REDIS'
+flushall
+REDIS
+else
+    redis-cli &> /dev/null <<'REDIS'
+config set stop-writes-on-bgsave-error no
+flushall
+REDIS
+fi
+
+sudo service redis-server restart &> /dev/null
+echo "Done."
