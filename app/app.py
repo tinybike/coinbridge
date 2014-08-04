@@ -4,8 +4,11 @@ CoinBridge minimal web app
 @author jack@tinybike.net
 """
 from __future__ import division
-from psycopg2cffi import compat
-compat.register()
+try:
+    from psycopg2cffi import compat
+    compat.register()
+except:
+    pass
 import sys
 try:
     import cdecimal
@@ -35,9 +38,6 @@ except:
     from psycopg2.extras import RealDictCursor
 from redis import StrictRedis
 from bridge import Bridge
-
-# import tornadoredis
-# import tornadoredis.pubsub
 
 redis = StrictRedis()
 
