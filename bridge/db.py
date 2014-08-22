@@ -1,8 +1,8 @@
-try:
-    from psycopg2cffi import compat
-    compat.register()
-except:
-    pass
+#!/usr/bin/env python
+"""
+postgres database setup using sqlalchemy
+@author jack@tinybike.net
+"""
 from sqlalchemy import Column, Integer, String, Numeric, DateTime, Boolean,\
                        Table, Text, Float, create_engine, func
 from sqlalchemy.ext.declarative import declarative_base

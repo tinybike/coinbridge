@@ -1,14 +1,52 @@
 #!/bin/bash
+#
+# use bitcoind's walletnotify to record transactions in a postgres database
+# note: for the latest (v. 9.9+) versions of bitcoin, replace the bitcoind
+# commands with bitcoin-cli (the syntax is otherwise identical)
+#
+# @author jack@tinybike.net
+
+# the transaction hash is passed to the script by walletnotify
 txhash=${1}
+
+# bitcoind looks up the transaction hash and gets the transaction's details;
+# we use jq to just select out the "confirmations" (number of confirmations
+# this transaction has received) field
 confirms=`bitcoind gettransaction $txhash | jq '.["confirmations"]'`
+
+# use postgres's command-line tool (psql) to send commands to the database.
+# if this transaction (identified by its hash) is already in the database,
+# then set the number of confirmations equal to the number of confirmations
+# that bitcoind just looked up for us
 update=`psql -Ucoinbridge -hlocalhost -dcoinbridge -c "UPDATE transactions SET confirmations = $confirms, last_confirmation = now() WHERE txhash = '$txhash'"`
+
+# if the database tells us that we updated a transaction record successfully,
+# then we're done
+
+# if we didn't update any records in the database, then this is a new
+# transaction, so we need to look up additional details about the transaction
+# and use those to create a new transaction record in the database
 if [ "$update" == 'UPDATE 0' ]; then
+
+    # use bitcoind to look up several transaction details:
+    #   - category (e.g., "send")
+    #   - bitcoin address
+    #   - bitcoin account
+    #   - amount of the transaction
     sendrecv=`bitcoind gettransaction $txhash | jq '.["details"][0]["category"]'`
     address=`bitcoind gettransaction $txhash | jq '.["details"][0]["address"]'`
     account=`bitcoind gettransaction $txhash | jq '.["details"][0]["account"]'`
     amount=`bitcoind gettransaction $txhash | jq '.["details"][0]["amount"]'`
+
+    # if this is a "send" transaction, then the bitcoin address is the address
+    # of the sender in our database: from_user_id is the account value,
+    # and from_coin_address is the address value
     if [ $sendrecv == 'send' ]; then
         psql -Ucoinbridge -hlocalhost -dcoinbridge -c "INSERT INTO transactions (txtype, from_user_id, txhash, amount, currency, from_coin_address, confirmations, last_confirmation) VALUES ('sendfrom', '$account', '$txhash', '$amount', 'BTC', '$address', $confirms, now())"
+
+    # otherwise, this is a incoming transaction, so the bitcoin address is the
+    # address of the recipient in our database: to_user_id is the account value
+    # and to_coin_address is the address value
     else
         psql -Ucoinbridge -hlocalhost -dcoinbridge -c "INSERT INTO transactions (txtype, to_user_id, txhash, amount, currency, to_coin_address, confirmations, last_confirmation) VALUES ('inbound', '$account', '$txhash', '$amount', 'BTC', '$address', $confirms, now())"
     fi

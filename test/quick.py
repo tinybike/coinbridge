@@ -1,7 +1,10 @@
 #!/usr/bin/env python
-import sys
-import cdecimal
-sys.modules["decimal"] = cdecimal
+try:
+    import sys
+    import cdecimal
+    sys.modules["decimal"] = cdecimal
+except:
+    pass
 from decimal import Decimal
 import os
 from pprint import pprint

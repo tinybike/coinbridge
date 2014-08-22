@@ -4,10 +4,10 @@ from distutils.core import setup
 
 setup(name="coinbridge",
       version="0.1",
-      description="Bitcoin/postgres bridge",
+      description="Bitcoin/PostgreSQL bridge",
       author="Jack Peterson",
       author_email="<jack@tinybike.net>",
       maintainer="Jack Peterson",
       maintainer_email="<jack@tinybike.net>",
-      url="https://github.com/tensorjack/coinbridge",
+      url="https://github.com/tensorjack/CoinBridge",
       packages=["bridge"])

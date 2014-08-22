@@ -6,8 +6,16 @@ Usage:
     bitcoin_bridge = Bridge()
     bitcoin_bridge.payment(from_account, to_account, amount)
 @author jack@tinybike.net (Jack Peterson)
-@license None yet, you dirty thief
+@license MIT
 """
+__author__ = "Jack Peterson"
+__copyright__ = 'Copyright 2014, Jack Peterson'
+__credits__ = ["Jack Peterson"]
+__license__ = "MIT"
+__version__ = "0.1"
+__maintainer__ = "Jack Peterson"
+__email__ = "jack@tinybike.net"
+
 import os
 import sys
 import urllib2

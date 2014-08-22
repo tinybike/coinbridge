@@ -3,9 +3,12 @@
 coinbridge unit tests
 @author jack@tinybike.net
 """
-import sys
-import cdecimal
-sys.modules["decimal"] = cdecimal
+try:
+    import sys
+    import cdecimal
+    sys.modules["decimal"] = cdecimal
+except:
+    pass
 import unittest
 from decimal import Decimal, ROUND_HALF_EVEN
 import os, sys
