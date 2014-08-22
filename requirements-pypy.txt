@@ -1,7 +1,0 @@
-requests
-bcrypt
-nose
-coverage
-sqlalchemy
-bunch
-python-jsonrpc

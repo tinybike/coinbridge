@@ -1,11 +1,3 @@
-requests
-pycrypto
-py-bcrypt
-hashlib
-Crypto
-nose
 sqlalchemy
 bunch
 python-jsonrpc
-tornado
-psycopg2
