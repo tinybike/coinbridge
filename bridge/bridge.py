@@ -1,21 +1,6 @@
-#!/usr/bin/env python
 """
-Coin bridges for fun and profit
-Usage:
-    from bridge import Bridge
-    bitcoin_bridge = Bridge()
-    bitcoin_bridge.payment(from_account, to_account, amount)
-@author jack@tinybike.net (Jack Peterson)
-@license MIT
+Bridge class: comprehensive wrappers for JSON-RPC functionality
 """
-__author__ = "Jack Peterson"
-__copyright__ = 'Copyright 2014, Jack Peterson'
-__credits__ = ["Jack Peterson"]
-__license__ = "MIT"
-__version__ = "0.1"
-__maintainer__ = "Jack Peterson"
-__email__ = "jack@tinybike.net"
-
 import os
 import sys
 import urllib2
@@ -311,8 +296,7 @@ class Bridge(object):
                           int(timeout))
         except:
             self.logger.warn("Could not unlock wallet")
-            if config.TESTING:
-                raise
+            if config.TESTING: raise
 
     @error_handler
     def walletunlock(self, timeout=30):
@@ -359,3 +343,6 @@ class Bridge(object):
     def call(self, command, *args):
         return self.rpc.call(str(command), *args)
 
+
+if __name__ == "__main__":
+    pass

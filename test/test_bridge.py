@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 """
-coinbridge unit tests
-@author jack@tinybike.net
+Unit tests for CoinBridge.
+
+For obvious reasons, these tests are configured assuming that your bitcoind
+is connected to the Bitcoin testnet.  To obtain some testnet Bitcoins, 
+visit TP's Testnet Faucet: http://tpfaucet.appspot.com/.  Please remember to
+return them when you are done testing!
 """
 try:
     import sys
@@ -9,10 +13,12 @@ try:
     sys.modules["decimal"] = cdecimal
 except:
     pass
+import os
 import unittest
 from decimal import Decimal, ROUND_HALF_EVEN
-import os, sys
+
 sys.path.append(os.path.join(os.path.dirname(__file__), os.pardir, "bridge"))
+
 from bridge import Bridge, db
 import config
 

@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 """
-postgres database setup using sqlalchemy
-@author jack@tinybike.net
+PostgreSQL database setup (using SQLAlchemy)
 """
-from sqlalchemy import Column, Integer, String, Numeric, DateTime, Boolean,\
-                       Table, Text, Float, create_engine, func
+from sqlalchemy import Column, Integer, String, Numeric, DateTime, Boolean, Table, Text, Float, create_engine, func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.schema import MetaData

@@ -5,10 +5,12 @@ try:
     sys.modules["decimal"] = cdecimal
 except:
     pass
-from decimal import Decimal
 import os
+from decimal import Decimal
 from pprint import pprint
+
 sys.path.append(os.path.join(os.path.dirname(__file__), os.pardir, "bridge"))
+
 from bridge import Bridge
 import config
 
