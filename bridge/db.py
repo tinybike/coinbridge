@@ -1,5 +1,8 @@
-from psycopg2cffi import compat
-compat.register()
+try:
+    from psycopg2cffi import compat
+    compat.register()
+except:
+    pass
 from sqlalchemy import Column, Integer, String, Numeric, DateTime, Boolean,\
                        Table, Text, Float, create_engine, func
 from sqlalchemy.ext.declarative import declarative_base
