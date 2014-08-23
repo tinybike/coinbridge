@@ -1,5 +1,7 @@
 ## Bitcoin/PostgreSQL bridge
 
+[![Build Status](https://travis-ci.org/tensorjack/CoinBridge.svg)](https://travis-ci.org/tensorjack/CoinBridge)[![Coverage Status](https://img.shields.io/coveralls/tensorjack/CoinBridge.svg)](https://coveralls.io/r/tensorjack/CoinBridge)
+
 ### Installation (Ubuntu 12.04 LTS)
 
     $ pip install -r requirements.txt

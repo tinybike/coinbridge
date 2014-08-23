@@ -44,7 +44,7 @@ class TestBridge(unittest.TestCase):
         self.bridge.walletlock()
         self.assertIn(self.bridge.coin, config.COINS)
 
-    def test_payment(self):
+    def _test_payment(self):
         """Bridge.payment"""
         # "move" payments: no transaction fee
         # me -> me
@@ -127,22 +127,27 @@ class TestBridge(unittest.TestCase):
     def test_walletunlock(self):
         """Bridge.walletunlock"""
         self.bridge.walletunlock()
-        result = self.bridge.payment(self.user_id,
-                                     self.address,
-                                     self.amount_to_send)
-        self.assertTrue(result)
+        signature = self.bridge.signmessage(self.test_address, self.message)
+        self.assertIsNotNone(signature)
+        self.assertEqual(type(signature), str)
+        verified = self.bridge.verifymessage(self.test_address,
+                                             signature,
+                                             self.message)
+        self.assertTrue(verified)
 
     def test_walletlock(self):
         """Bridge.walletlock"""
         self.bridge.walletunlock()
-        result = self.bridge.payment(self.user_id,
-                                     self.address,
-                                     self.amount_to_send)
-        self.assertTrue(result)
+        signature = self.bridge.signmessage(self.test_address, self.message)
+        self.assertIsNotNone(signature)
+        self.assertEqual(type(signature), str)
+        verified = self.bridge.verifymessage(self.test_address,
+                                             signature,
+                                             self.message)
+        self.assertTrue(verified)
         self.bridge.walletlock()
-        self.assertRaises(Exception, self.bridge.payment(self.user_id,
-                                                         self.address,
-                                                         self.amount_to_send))
+        self.assertRaises(Exception, self.bridge.signmessage(self.test_address,
+                                                             self.message))
 
     def sendfrom(self, destination):
         old_balance = self.bridge.getbalance(self.user_id)
@@ -155,7 +160,7 @@ class TestBridge(unittest.TestCase):
         new_balance = self.bridge.getbalance(self.user_id)
         return old_balance, new_balance
 
-    def test_sendfrom(self):
+    def _test_sendfrom(self):
         """Bridge.sendfrom"""
         for destination in (self.address, self.btc_testnet_faucet):
             old_balance, new_balance = self.sendfrom(destination)
@@ -173,7 +178,7 @@ class TestBridge(unittest.TestCase):
         new_balance = self.bridge.getbalance(self.user_id)
         return old_balance, new_balance
 
-    def test_move(self):
+    def _test_move(self):
         """Bridge.move"""
         for destination in (self.other_user_id, self.test_address):
             old_balance, new_balance = self.move(destination)
