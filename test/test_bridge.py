@@ -18,7 +18,7 @@ from decimal import Decimal, ROUND_HALF_EVEN
 
 sys.path.append(os.path.join(os.path.dirname(__file__), os.pardir, "bridge"))
 
-from bridge import Bridge, db
+from src import Bridge, db
 import config
 
 class TestBridge(unittest.TestCase):

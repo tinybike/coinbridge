@@ -5,7 +5,7 @@ database.  Listens for transaction confirmations and automatically
 updates a transactions table in your database.
 
 Usage:
-    from bridge import Bridge
+    from coinbridge import Bridge
     bitcoin_bridge = Bridge()
     bitcoin_bridge.payment(from_account, to_account, amount)
 """
