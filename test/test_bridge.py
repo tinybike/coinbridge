@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-"""
-Unit tests for CoinBridge.
+"""Unit tests for CoinBridge.
 
 For obvious reasons, these tests are configured assuming that your bitcoind
 is connected to the Bitcoin testnet.  To obtain some testnet Bitcoins, 

@@ -1,5 +1,8 @@
 """
-Bridge class: comprehensive wrappers for JSON-RPC functionality
+A higher-level "payment" method which uses free, instant Bitcoin transfers
+between accounts in the same wallet, and standard Bitcoin transactions
+otherwise.  Also includes a comprehensive wrapper for bitcoind/bitcoin-cli
+JSON-RPC functionality.
 """
 import os
 import sys
@@ -19,8 +22,19 @@ db.init()
 logging.basicConfig(level=logging.INFO)
 
 class Bridge(object):
+    """Interface and convenience functions for coin daemon interaction.
 
-    def __init__(self, coin="Bitcoin"):
+    Bridge includes "payment", a convenience method for sending Bitcoins.  Uses
+    free, instant "move" transfers between accounts in the same wallet, and
+    standard "sendfrom" transactions otherwise.  Useful for websites where
+    many user accounts are stored in the same wallet.
+
+    Attributes:
+      coin (str): lower-case name of the coin (default="bitcoin")
+      connected (bool): True if connected to the coin daemon, False otherwise
+      quantum (Decimal): number of digits to include after the decimal point
+    """
+    def __init__(self, coin="bitcoin"):
         self.coin = coin.lower()
         self.connected = False
         self.quantum = Decimal("1e-"+str(config.COINS[self.coin]["decimals"]))
@@ -34,9 +48,12 @@ class Bridge(object):
 
     @error_handler
     def payment(self, origin, destination, amount):
-        """
+        """Convenience method for sending Bitcoins.
+
         Send coins from origin to destination. Calls record_tx to log the
-        transaction to database.
+        transaction to database.  Uses free, instant "move" transfers
+        if addresses are both local (in the same wallet), and standard
+        "sendfrom" transactions otherwise.
 
         Args:
           origin (str): user_id of the sender
@@ -90,7 +107,20 @@ class Bridge(object):
     @error_handler
     def record_tx(self, origin, destination, amount,
                   outcome, destination_id=None):
-        """Record transaction in the database."""
+        """Records a transaction in the database.
+
+        Args:
+          origin (str): user_id of the sender
+          destination (str): coin address or user_id of the recipient
+          amount (str, Decimal, number): amount to send
+          outcome (str, bool): the transaction hash if this is a "sendfrom"
+                               transaction; for "move", True if successful,
+                               False otherwise
+          destination_id (str): the destination account label ("move" only)
+
+        Returns:
+          str or bool: the outcome argument is passed through
+        """
         # "move" commands
         if destination_id:
             tx = db.Transaction(
@@ -128,8 +158,7 @@ class Bridge(object):
 
     @error_handler
     def rpc_connect(self, testnet=False):
-        """
-        Connect to a coin daemon's JSON RPC interface.
+        """Connect to a coin daemon's JSON RPC interface.
 
         Args:
           testnet (bool): True for the testnet, False for the mainnet
@@ -163,16 +192,15 @@ class Bridge(object):
 
     @error_handler
     def gettransaction(self, txhash):
-        """
-        Transaction data for a specified hash
-        """
+        """Transaction data for a specified hash"""
         return self.rpc.call("gettransaction", txhash)
 
     @error_handler
     def getaccountaddress(self, user_id=""):
-        """
-        Get the coin address associated with a user id.  If the user id does
-        not yet have an address for this coin, generate one.
+        """Get the coin address associated with a user id.
+
+        If the specified user id does not yet have an address for this
+        coin, then generate one.
 
         Args:
           user_id (str): this user's unique identifier
@@ -186,8 +214,7 @@ class Bridge(object):
     
     @error_handler
     def getbalance(self, user_id="", as_decimal=True):
-        """
-        Calculate the total balance in all addresses belonging to this user.
+        """Calculate the total balance in all addresses belonging to this user.
 
         Args:
           user_id (str): this user's unique identifier
@@ -206,9 +233,7 @@ class Bridge(object):
 
     @error_handler
     def getaddressesbyaccount(self, user_id=""):
-        """
-        List all addresses associated with this account
-        """
+        """List all addresses associated with this account"""
         return self.rpc.call("getaddressesbyaccount", user_id)
 
     @error_handler
@@ -221,8 +246,7 @@ class Bridge(object):
     
     @error_handler
     def listtransactions(self, user_id="", count=10, start_at=0):
-        """
-        List all transactions associated with this account.
+        """List all transactions associated with this account.
 
         Args:
           user_id (str): this user's unique identifier
@@ -238,10 +262,10 @@ class Bridge(object):
 
     @error_handler
     def move(self, fromaccount, toaccount, amount, minconf=1):
-        """
-        Send coins between accounts in the same wallet.  If the receiving
-        account does not exist, it is automatically created (but not
-        automatically assigned an address).
+        """Send coins between accounts in the same wallet.
+
+        If the receiving account does not exist, it is automatically
+        created (but not automatically assigned an address).
 
         Args:
           fromaccount (str): origin account
@@ -251,7 +275,7 @@ class Bridge(object):
                          many confirmations (default=1) 
 
         Returns:
-          str
+          bool: True if the coins are moved successfully, False otherwise
         """
         amount = Decimal(amount).quantize(self.quantum, rounding=ROUND_HALF_EVEN)
         return self.rpc.call("move",
@@ -300,23 +324,39 @@ class Bridge(object):
 
     @error_handler
     def walletunlock(self, timeout=30):
+        """Unlock wallet.
+
+        Unlocking a wallet allows coins to be spent, messages to be signed,
+        and other restricted actions to take place.
+
+        Args:
+          timeout (int): how many seconds the wallet will remain unlocked.
+                         (default=30)
+        """
         return self.walletpassphrase(int(timeout))
 
     @error_handler
     def walletlock(self):
+        """Lock wallet.
+
+        Locking a wallet prohibits certain restricted commands, such as
+        spending coins, signing messages, etc.
+        """
         self.rpc.call("walletlock")
 
     @error_handler
     def signmessage(self, address, message):
-        """
-        Sign a message with the private key of an address.
+        """Sign a message with the private key of an address.
+
+        Cryptographically signs a message using ECDSA.  Since this requires
+        an address's private key, the wallet must be unlocked first.
 
         Args:
           address (str): address used to sign the message
           message (str): plaintext message to which apply the signature
 
         Returns:
-          str: message signed with ECDSA signature
+          str: ECDSA signature over the message
         """
         signature = self.rpc.call("signmessage", address, message)
         self.logger.debug("Signature: %s" % signature)
@@ -341,6 +381,12 @@ class Bridge(object):
 
     @error_handler
     def call(self, command, *args):
+        """
+        Passes an arbitrary command to the coin daemon.
+
+        Args:
+          command (str): command to be sent to the coin daemon
+        """
         return self.rpc.call(str(command), *args)
 
 
