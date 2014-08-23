@@ -1,7 +1,10 @@
-"""
-A higher-level "payment" method which uses free, instant Bitcoin transfers
+"""Connection and interface between bitcoind and PostgreSQL.
+
+Includes a "payment" method which uses free, instant Bitcoin transfers
 between accounts in the same wallet, and standard Bitcoin transactions
-otherwise.  Also includes a comprehensive wrapper for bitcoind/bitcoin-cli
+otherwise.
+
+Also includes a comprehensive wrapper for bitcoind/bitcoin-cli
 JSON-RPC functionality.
 """
 import os

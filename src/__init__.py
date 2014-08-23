@@ -1,7 +1,7 @@
-#!/usr/bin/env python
-"""
-Bridge between the Bitcoin daemon (bitcoind) and a local PostgreSQL
-database.  Listens for transaction confirmations and automatically
+"""Bridge between Bitcoin and PostgreSQL.
+
+Connects the Bitcoin daemon (bitcoind) and a local PostgreSQL
+database. Listens for transaction confirmations and automatically
 updates a transactions table in your database.
 
 Usage:
@@ -16,12 +16,12 @@ try:
 except:
     pass
 
-__title__       =       "CoinBridge"
-__version__     =       "0.1"
-__author__      =       "Jack Peterson"
-__copyright__   =       "Copyright 2014, Jack Peterson"
-__license__     =       "MIT"
-__maintainer__  =       "Jack Peterson"
-__email__       =       "jack@tinybike.net"
+__title__      = "CoinBridge"
+__version__    = "0.1"
+__author__     = "Jack Peterson"
+__copyright__  = "Copyright 2014, Jack Peterson"
+__license__    = "MIT"
+__maintainer__ = "Jack Peterson"
+__email__      = "jack@tinybike.net"
 
 from .bridge import Bridge
