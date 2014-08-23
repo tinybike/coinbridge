@@ -29,4 +29,4 @@ Set environment variables:
 Add walletnotify to Bitcoin's config file (`jq` used for shell transaction parsing):
 
     $ apt-get install jq
-    $ echo "walletnotify=$BRIDGE/bridge/bitcoin-notify %s" >> ~/.bitcoin/bitcoin.conf
+    $ echo "walletnotify=$BRIDGE/bitcoin-notify %s" >> ~/.bitcoin/bitcoin.conf
