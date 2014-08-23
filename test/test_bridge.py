@@ -16,9 +16,9 @@ import os
 import unittest
 from decimal import Decimal, ROUND_HALF_EVEN
 
-sys.path.append(os.path.join(os.path.dirname(__file__), os.pardir, "bridge"))
+sys.path.append(os.path.join(os.path.dirname(__file__), os.pardir, "coinbridge"))
 
-from src import Bridge, db
+from coinbridge import Bridge, db
 import config
 
 class TestBridge(unittest.TestCase):

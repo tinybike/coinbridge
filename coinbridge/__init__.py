@@ -1,14 +1,28 @@
-"""Connection and interface between bitcoind and PostgreSQL.
+#!/usr/bin/env python
+"""Bridge between Bitcoin and PostgreSQL.
+
+Connects the Bitcoin daemon (bitcoind) and a local PostgreSQL
+database. Listens for transaction confirmations and automatically
+updates a transactions table in your database.
 
 Includes a "payment" method which uses free, instant Bitcoin transfers
 between accounts in the same wallet, and standard Bitcoin transactions
-otherwise.
-
-Also includes a comprehensive wrapper for bitcoind/bitcoin-cli
+otherwise. Also includes a comprehensive wrapper for bitcoind/bitcoin-cli
 JSON-RPC functionality.
+
+Usage:
+    from coinbridge import Bridge
+    bitcoin_bridge = Bridge()
+    bitcoin_bridge.payment(from_account, to_account, amount)
 """
+try:
+    import sys
+    import cdecimal
+    sys.modules["decimal"] = cdecimal
+except:
+    pass
 import os
-import sys
+import platform
 import urllib2
 import json
 import time
@@ -21,8 +35,27 @@ from errorhandler import error_handler
 import config
 import db
 
+__title__      = "CoinBridge"
+__version__    = "0.1"
+__author__     = "Jack Peterson"
+__copyright__  = "Copyright 2014, Jack Peterson"
+__license__    = "MIT"
+__maintainer__ = "Jack Peterson"
+__email__      = "jack@tinybike.net"
+
+VERSION = tuple(map(int, __version__.split('.')))
+
+# Python 3 compatibility
+_IS_PYTHON_3 = (platform.version() >= '3')
+identity = lambda x : x
+if _IS_PYTHON_3:
+    u = identity
+else:
+    import codecs
+    def u(string):
+        return codecs.unicode_escape_decode(string)[0]
+
 db.init()
-logging.basicConfig(level=logging.INFO)
 
 class Bridge(object):
     """Interface and convenience functions for coin daemon interaction.
@@ -41,6 +74,7 @@ class Bridge(object):
         self.coin = coin.lower()
         self.connected = False
         self.quantum = Decimal("1e-"+str(config.COINS[self.coin]["decimals"]))
+        logging.basicConfig(level=logging.INFO)
         self.logger = logging.getLogger(__name__)
 
     @contextmanager
@@ -394,4 +428,5 @@ class Bridge(object):
 
 
 if __name__ == "__main__":
-    pass
+    import doctest
+    doctest.testmod()

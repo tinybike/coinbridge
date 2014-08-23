@@ -11,7 +11,7 @@ from pprint import pprint
 
 sys.path.append(os.path.join(os.path.dirname(__file__), os.pardir, "bridge"))
 
-from src import Bridge
+from coinbridge import Bridge
 import config
 
 config.TESTING = True
