@@ -10,4 +10,4 @@ setup(name="coinbridge",
       maintainer="Jack Peterson",
       maintainer_email="<jack@tinybike.net>",
       url="https://github.com/tensorjack/CoinBridge",
-      packages=["bridge"])
+      packages=["src"])
