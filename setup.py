@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from ez_setup import use_setuptools
+use_setuptools()
 try:
     from setuptools import setup
 except ImportError:
