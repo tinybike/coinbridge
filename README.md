@@ -26,20 +26,20 @@ A convenience script, `init.sh`, is included that will do some initial configura
 
 1. Set up a `pgpass` file so transaction confirmations can be autologged to Postgres (replace HOST, PORT, USER, DATABASE, PASSWORD with your own settings):
     
-    $ touch ~/.pgpass
-    $ echo HOST:PORT:USER:DATABASE:PASSWORD >> ~/.pgpass
-    $ chmod 600 ~/.pgpass
+        $ touch ~/.pgpass
+        $ echo HOST:PORT:USER:DATABASE:PASSWORD >> ~/.pgpass
+        $ chmod 600 ~/.pgpass
 
 2. Set environment variables:
 
-    $ echo "export BRIDGE=/path/to/coinbridge" >> ~/.profile
-    $ echo "export PGPASSFILE=$HOME/.pgpass" >> ~/.profile
-    $ source ~/.profile
+        $ echo "export BRIDGE=/path/to/coinbridge" >> ~/.profile
+        $ echo "export PGPASSFILE=$HOME/.pgpass" >> ~/.profile
+        $ source ~/.profile
 
 3. Finally, you need to point Bitcoin's `walletnotify` at `coinbridge/bitcoin-listen`:
 
-    $ apt-get install jq
-    $ echo "walletnotify=$BRIDGE/bitcoin-notify %s" >> ~/.bitcoin/bitcoin.conf
+        $ apt-get install jq
+        $ echo "walletnotify=$BRIDGE/bitcoin-notify %s" >> ~/.bitcoin/bitcoin.conf
 
 ### Usage
 
