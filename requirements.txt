@@ -1,4 +1,6 @@
-sqlalchemy
-psycopg2
-bunch
-python-jsonrpc
+SQLAlchemy==0.9.7
+argparse==1.2.1
+bunch==1.0.1
+psycopg2==2.5.3
+python-jsonrpc==0.4.1
+wsgiref==0.1.2
