@@ -1,2 +1,2 @@
-include MANIFEST.in LICENSE.txt ez_setup.py README.md coinbridge/bitcoin-listen
+include MANIFEST.in LICENSE.txt README.md coinbridge/bitcoin-listen
 recursive-include coinbridge/data *
