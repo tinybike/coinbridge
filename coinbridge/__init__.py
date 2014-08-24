@@ -38,7 +38,7 @@ import pyjsonrpc
 import db
 
 __title__      = "Coinbridge"
-__version__    = "0.1.1"
+__version__    = "0.1.2"
 __author__     = "Jack Peterson"
 __copyright__  = "Copyright 2014, Dyffy Inc."
 __license__    = "MIT"
