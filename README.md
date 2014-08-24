@@ -23,7 +23,7 @@ Depending on your system, compiling Bitcoin from scratch can be a headache.  On 
 
 A convenience script, `init.sh`, is included that will do some initial configuration for you.  I have only tested this on Ubuntu 12.04/14.04 so far.  The below steps are only necessary if `init.sh` does not work for you:
 
-1. Set up a `pgpass` file so transaction confirmations can be autologged to Postgres (replace HOST, PORT, USER, DATABASE, PASSWORD with your own settings):
+1. Set up a `pgpass` file so transaction confirmations can be autologged to Postgres.  Replace HOST, PORT, USER, DATABASE, PASSWORD with your own settings.  Note: `coinbridge/db.py` expects the username to be `coinbridge`.  If you use a different username, you must also create a `coinbridge/data/pg.cfg` file (containing the `HOST:PORT:USER:DATABASE:PASSWORD` string) so that Python can connect to Postgres.
     
         $ touch ~/.pgpass
         $ echo HOST:PORT:USER:DATABASE:PASSWORD >> ~/.pgpass
@@ -38,10 +38,11 @@ A convenience script, `init.sh`, is included that will do some initial configura
 3. Finally, you need to point Bitcoin's `walletnotify` at `coinbridge/bitcoin-listen`:
 
         $ apt-get install jq
-        $ echo "walletnotify=$BRIDGE/bitcoin-notify %s" >> ~/.bitcoin/bitcoin.conf
+        $ echo "walletnotify=$BRIDGE/coinbridge/bitcoin-listen %s" >> ~/.bitcoin/bitcoin.conf
 
 ### Usage
 
     from coinbridge import Bridge
+    
     bitcoin_bridge = Bridge()
     bitcoin_bridge.payment(from_account, to_account, amount)

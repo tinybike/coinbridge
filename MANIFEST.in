@@ -1,2 +1,2 @@
-include MANIFEST.in setup.cfg LICENSE README.md coinbridge/bitcoin-listen
+include MANIFEST.in LICENSE README.md coinbridge/bitcoin-listen
 recursive-include coinbridge/data *
