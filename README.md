@@ -1,6 +1,6 @@
 ## Bitcoin/PostgreSQL bridge
 
-[![Build Status](https://travis-ci.org/tensorjack/CoinBridge.svg)](https://travis-ci.org/tensorjack/CoinBridge)
+[![Build Status](https://travis-ci.org/tensorjack/coinbridge.svg)](https://travis-ci.org/tensorjack/coinbridge)
 
 Bridge between Bitcoin and PostgreSQL.
 
