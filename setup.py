@@ -5,7 +5,7 @@ except ImportError:
     from distutils.core import setup
 
 setup(
-    name="Coinbridge",
+    name="coinbridge",
     version="0.1",
     description="Bitcoin/PostgreSQL bridge",
     author="Jack Peterson",
