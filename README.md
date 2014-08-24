@@ -13,7 +13,7 @@ Coinbridge has been tested with Bitcoin, but it should work for any altcoin that
 ### Installation
 
     $ pip install -r requirements.txt
-    $ python setup.py install
+    $ pip install coinbridge
 
 Depending on your system, compiling Bitcoin from scratch can be a headache.  On Ubuntu, you can simply install `bitcoind` from the bitcoin PPA:
 
