@@ -12,9 +12,11 @@ JSON-RPC functionality.
 
 Usage:
     from coinbridge import Bridge
-    bitcoin_bridge = Bridge()
-    bitcoin_bridge.payment(from_account, to_account, amount)
+    bridge = Bridge()
+    bridge.payment(from_account, to_account, amount)
+
 """
+from __future__ import division, unicode_literals
 try:
     import sys
     import cdecimal
@@ -23,29 +25,26 @@ except:
     pass
 import os
 import platform
+import traceback
 import urllib2
 import json
 import time
+import logging
 from datetime import datetime
 from decimal import Decimal, ROUND_HALF_EVEN
 from contextlib import contextmanager
+from functools import wraps
 import pyjsonrpc
-import logging
-from errorhandler import error_handler
-import config
 import db
 
-__title__      = "CoinBridge"
+__title__      = "Coinbridge"
 __version__    = "0.1"
 __author__     = "Jack Peterson"
-__copyright__  = "Copyright 2014, Jack Peterson"
+__copyright__  = "Copyright 2014, Dyffy Inc."
 __license__    = "MIT"
 __maintainer__ = "Jack Peterson"
-__email__      = "jack@tinybike.net"
+__email__      = "jack@dyffy.com"
 
-VERSION = tuple(map(int, __version__.split('.')))
-
-# Python 3 compatibility
 _IS_PYTHON_3 = (platform.version() >= '3')
 identity = lambda x : x
 if _IS_PYTHON_3:
@@ -55,7 +54,31 @@ else:
     def u(string):
         return codecs.unicode_escape_decode(string)[0]
 
+HERE = os.path.dirname(os.path.realpath(__file__))
+with open(os.path.join(HERE, "data", "coins.json")) as coinfile:
+    COINS = json.load(coinfile)
+
 db.init()
+
+def error_handler(task):
+    """Handle and log RPC errors."""
+    @wraps(task)
+    def wrapper(self, *args, **kwargs):
+        try:
+            return task(self, *args, **kwargs)
+        except Exception as e:
+            self.connected = False
+            if not self.testing:
+                exc_type, exc_obj, exc_tb = sys.exc_info()
+                fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                error_message = (
+                    "[" + str(datetime.now()) + "] Error in task \"" +
+                    task.__name__ + "\" (" +
+                    fname + "/" + str(exc_tb.tb_lineno) +
+                    ")" + e.message
+                )
+                self.logger.error("%s: RPC instruction failed" % error_message)
+    return wrapper
 
 class Bridge(object):
     """Interface and convenience functions for coin daemon interaction.
@@ -65,17 +88,35 @@ class Bridge(object):
     standard "sendfrom" transactions otherwise.  Useful for websites where
     many user accounts are stored in the same wallet.
 
-    Attributes:
-      coin (str): lower-case name of the coin (default="bitcoin")
-      connected (bool): True if connected to the coin daemon, False otherwise
-      quantum (Decimal): number of digits to include after the decimal point
+    All payments are automatically logged to the 'transactions' table in your
+    PostgreSQL database.
+
     """
-    def __init__(self, coin="bitcoin"):
+    def __init__(self, coin="Bitcoin", testnet=False, reconnect=True,
+                 testing=False, loglevel=logging.INFO):
+        """
+        Args:
+          coin (str): name of the coin (default="Bitcoin")
+          testnet (bool): True for the testnet, False for the mainnet (default)
+          loglevel (int): logging.{DEBUG, INFO, WARN, ERROR}
+          reconnect (bool): True to automatically reconnect (default)
+          testing (bool): True if unit testing, False otherwise (default)
+
+        Attributes:
+          coin (str): lower-case name of the coin
+          connected (bool): True if connected to the coin daemon, False otherwise
+          quantum (Decimal): number of digits to include after the decimal point
+
+        """
+        logging.basicConfig(level=loglevel)
+        self.logger = logging.getLogger(__name__)
         self.coin = coin.lower()
         self.connected = False
-        self.quantum = Decimal("1e-"+str(config.COINS[self.coin]["decimals"]))
-        logging.basicConfig(level=logging.INFO)
-        self.logger = logging.getLogger(__name__)
+        self.quantum = Decimal("1e-"+str(COINS[self.coin]["decimals"]))
+        self.testnet = testnet
+        self.testing = testing
+        self.reconnect = reconnect
+        self.rpc_connect()
 
     @contextmanager
     def openwallet(self):
@@ -92,6 +133,15 @@ class Bridge(object):
         if addresses are both local (in the same wallet), and standard
         "sendfrom" transactions otherwise.
 
+        The sender is required to be specified by user_id (account label);
+        however, the recipient can be specified either by Bitcoin address
+        (anyone) or user_id (if the user is local).
+
+        Payment tries sending Bitcoins in this order:
+          1. "move" from account to account (local)
+          2. "move" from account to address (local)
+          3. "sendfrom" account to address (broadcast)
+
         Args:
           origin (str): user_id of the sender
           destination (str): coin address or user_id of the recipient
@@ -99,25 +149,13 @@ class Bridge(object):
 
         Returns:
           bool: True if successful, False otherwise
+
         """
-        attempts = 0
-        while not self.connected:
-            attempts += 1
-            self.rpc_connect()
-            if attempts > 5:
-                coin_data = json.dumps(config.COINS[self.coin],
-                                       indent=3, sort_keys=True)
-                could_not_connect = (
-                    "Could not create HTTP RPC connection "
-                    "to %s daemon using config:\n%s\nIs the "
-                    "daemon running?"
-                ) % (self.coin, coin_data)
-                raise Exception(could_not_connect)
-            time.sleep(5)
         if type(amount) != Decimal:
             amount = Decimal(amount)
         if amount <= 0:
             raise Exception("Amount must be a positive number")
+
         # Check if the destination is within the same wallet;
         # if so, we can use the fast (and free) "move" command
         all_addresses = []
@@ -135,6 +173,7 @@ class Bridge(object):
                         result = self.move(origin, account, amount)
                     return self.record_tx(origin, destination, amount,
                                           result, account)
+
             # Didn't find anything, so use "sendfrom" instead
             else:
                 with self.openwallet():
@@ -156,7 +195,8 @@ class Bridge(object):
           destination_id (str): the destination account label ("move" only)
 
         Returns:
-          str or bool: the outcome argument is passed through
+          str or bool: the outcome (input) argument
+
         """
         # "move" commands
         if destination_id:
@@ -166,12 +206,13 @@ class Bridge(object):
                 to_user_id=destination_id,
                 txdate=datetime.now(),
                 amount=amount,
-                currency=config.COINS[self.coin]["ticker"],
+                currency=COINS[self.coin]["ticker"],
                 to_coin_address=destination,
             )
+
         # "sendfrom" commands
         else:
-            self.logger.info(self.gettransaction(outcome))
+            self.logger.debug(self.gettransaction(outcome))
             confirmations = self.gettransaction(outcome)["confirmations"]
             last_confirmation = datetime.now() if confirmations else None
             tx = db.Transaction(
@@ -180,7 +221,7 @@ class Bridge(object):
                 txhash=outcome,
                 txdate=datetime.now(),
                 amount=amount,
-                currency=config.COINS[self.coin]["ticker"],
+                currency=COINS[self.coin]["ticker"],
                 to_coin_address=destination,
                 confirmations=confirmations,
                 last_confirmation=last_confirmation
@@ -189,47 +230,103 @@ class Bridge(object):
         db.session.commit()
         return outcome
 
+    @error_handler
+    def rpc_connect(self):
+        """Connect to a coin daemon's JSON RPC interface.
+
+        Returns:
+          bool: True if successfully connected, False otherwise.
+
+        """
+        if self.coin in COINS:
+            rpc_url = COINS[self.coin]["rpc-url"] + ":"
+            if self.testnet:
+                rpc_url += COINS[self.coin]["rpc-port-testnet"]
+            else:
+                rpc_url += COINS[self.coin]["rpc-port"]
+            self.rpc = pyjsonrpc.HttpClient(
+                url=rpc_url,
+                username=COINS[self.coin]["rpc-user"],
+                password=COINS[self.coin]["rpc-password"]
+            )
+            self.logger.debug(self.coin, "RPC connection ok")
+            self.connected = True
+        else:
+            self.logger.debug(self.coin, "bridge not found")
+        return self.connected
+
     ##################################
     # Wrappers for JSON RPC commands #
     ##################################
 
     @error_handler
-    def rpc_connect(self, testnet=False):
-        """Connect to a coin daemon's JSON RPC interface.
-
-        Args:
-          testnet (bool): True for the testnet, False for the mainnet
+    def getinfo(self):
+        """Get basic information for this coin.
 
         Returns:
-          bool: True if successfully connected, False otherwise.
-        """
-        if self.coin in config.COINS:
-            rpc_url = config.COINS[self.coin]["rpc-url"] + ":"
-            if testnet:
-                rpc_url += config.COINS[self.coin]["rpc-port-testnet"]
-            else:
-                rpc_url += config.COINS[self.coin]["rpc-port"]
-            self.rpc = pyjsonrpc.HttpClient(
-                url=rpc_url,
-                username=config.COINS[self.coin]["rpc-user"],
-                password=config.COINS[self.coin]["rpc-password"]
-            )
-            if config.DEBUG:
-                self.logger.debug(self.coin, "RPC connection ok")
-            self.connected = True
-        else:
-            if config.DEBUG:
-                self.logger.debug(self.coin, "bridge not found")
-        return self.connected
+          dict: basic coin information, for example:
+            {
+              "version" : 90201,
+              "protocolversion" : 70002,
+              "walletversion" : 60000,
+              "balance" : 1.53250000,
+              "blocks" : 277015,
+              "timeoffset" : 0,
+              "connections" : 8,
+              "proxy" : "",
+              "difficulty" : 1.00000000,
+              "testnet" : true,
+              "keypoololdest" : 1405393929,
+              "keypoolsize" : 101,
+              "unlocked_until" : 0,
+              "paytxfee" : 0.00000000,
+              "relayfee" : 0.00001000,
+              "errors" : 
+            }
 
-    @error_handler
-    def getinfo(self):
-        """Get basic info for this coin"""
+        """
         return self.rpc.call("getinfo")
 
     @error_handler
     def gettransaction(self, txhash):
-        """Transaction data for a specified hash"""
+        """Look up detailed transaction information, using its hash.
+
+        Args:
+          txhash (str): transaction hash to be looked up
+
+        Returns:
+          dict: details of the transaction.  For example:
+            {
+              "amount" : 0.00000000,
+              "fee" : 0.00000000,
+              "confirmations" : 166,
+              "blockhash" : "00000000510dcd9863...",
+              "blockindex" : 1,
+              "blocktime" : 1408759544,
+              "txid" : "66d6536bd3c6863d8...",
+              "walletconflicts" : [
+              ],
+              "time" : 1408758352,
+              "timereceived" : 1408758352,
+              "details" : [
+                {
+                  "account" : "4",
+                  "address" : "n2X1EZS4fAqYiv...",
+                  "category" : "send",
+                  "amount" : -0.01000000,
+                  "fee" : 0.00000000
+                },
+                {
+                  "account" : "4",
+                  "address" : "n2X1EZS4fAqYiv...",
+                  "category" : "receive",
+                  "amount" : 0.01000000
+                }
+              ],
+              "hex" : "0100000001acdb4..."
+            }
+
+        """
         return self.rpc.call("gettransaction", txhash)
 
     @error_handler
@@ -243,7 +340,7 @@ class Bridge(object):
           user_id (str): this user's unique identifier
 
         Returns:
-          str: address for this coin.
+          str: Base58Check address for this account
         """
         address = self.rpc.call("getaccountaddress", user_id)
         self.logger.debug("Your", self.coin, "address is", address)
@@ -259,9 +356,9 @@ class Bridge(object):
                              or a string if False
 
         Returns:
-          str: this account's total coin balance
+          str or Decimal: this account's total coin balance
         """
-        balance = str(self.rpc.call("getbalance", user_id))
+        balance = unicode(self.rpc.call("getbalance", user_id))
         self.logger.debug("\"" + user_id + "\"", self.coin, "balance:", balance)
         if as_decimal:
             return Decimal(balance)
@@ -335,8 +432,6 @@ class Bridge(object):
           str: transaction ID
         """
         amount = Decimal(amount).quantize(self.quantum, rounding=ROUND_HALF_EVEN)
-        # base_unit_amount = amount * Decimal("1e" + str(config.COINS[self.coin]["decimals"]))
-        # priority = sum(base_unit_amount * input_age)/size_in_bytes
         txhash = self.rpc.call("sendfrom",
             user_id, dest_address, float(str(amount)), minconf
         )
@@ -347,17 +442,16 @@ class Bridge(object):
 
     @error_handler
     def encryptwallet(self):
-        self.rpc.call("encryptwallet", config.COINS[self.coin]["passphrase"])
+        self.rpc.call("encryptwallet", COINS[self.coin]["passphrase"])
 
     @error_handler
     def walletpassphrase(self, timeout=30):
         try:
             self.rpc.call("walletpassphrase",
-                          config.COINS[self.coin]["passphrase"],
+                          COINS[self.coin]["passphrase"],
                           int(timeout))
         except:
-            self.logger.warn("Could not unlock wallet")
-            if config.TESTING: raise
+            self.logger.error("Could not unlock wallet")
 
     @error_handler
     def walletunlock(self, timeout=30):

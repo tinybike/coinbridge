@@ -1,12 +1,14 @@
 #!/bin/bash
+# bitcoin-notify: send bitcoin transactions to postgres
 #
-# use bitcoind's walletnotify to record transactions in a postgres database
-# note: for the latest (v. 9.9+) versions of bitcoin, replace the bitcoind
-# commands with bitcoin-cli (the syntax is otherwise identical)
+# Use bitcoind's walletnotify to record transactions in a postgres database.
+# Note: for the latest (v. 9.9+) versions of Bitcoin, replace the bitcoind
+# commands with bitcoin-cli (the syntax is otherwise identical).
 #
-# @author jack@tinybike.net
+# @author Jack Peterson (jack@dyffy.com)
+# @license MIT
 
-# the transaction hash is passed to the script by walletnotify
+# the bitcoin transaction hash is passed in from walletnotify
 txhash=${1}
 
 # bitcoind looks up the transaction hash and gets the transaction's details;
@@ -32,7 +34,7 @@ if [ "$update" == 'UPDATE 0' ]; then
     #   - category (e.g., "send")
     #   - bitcoin address
     #   - bitcoin account
-    #   - amount of the transaction
+    #   - amount
     sendrecv=`bitcoind gettransaction $txhash | jq '.["details"][0]["category"]'`
     address=`bitcoind gettransaction $txhash | jq '.["details"][0]["address"]'`
     account=`bitcoind gettransaction $txhash | jq '.["details"][0]["account"]'`

@@ -1,0 +1,8 @@
+{
+    "host": "localhost",
+    "database": "coinbridge",
+    "user": "coinbridge",
+    "password": "overpass",
+    "driver": "psycopg2",
+    "port": 5432
+}

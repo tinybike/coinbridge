@@ -1,11 +1,15 @@
 #!/usr/bin/env python
-"""Unit tests for CoinBridge.
+"""Unit tests for Coinbridge.
 
-For obvious reasons, these tests are configured assuming that your bitcoind
-is connected to the Bitcoin testnet.  To obtain some testnet Bitcoins, 
-visit TP's Testnet Faucet: http://tpfaucet.appspot.com/.  Please remember to
-return them when you are done testing!
+These tests require you to be running bitcoind.  These tests assume your
+bitcoind is connected to the Bitcoin testnet.  This file only includes
+tests that do not transfer/spend Bitcoins.
+
+To obtain some testnet Bitcoins, visit TP's Testnet Faucet, at
+http://tpfaucet.appspot.com/.  Please remember to return your testnet BTC
+to msj42CCGruhRsFrGATiUuh25dtxYtnpbTx when you are done testing!
 """
+from __future__ import division, unicode_literals
 try:
     import sys
     import cdecimal
@@ -16,106 +20,64 @@ import os
 import unittest
 from decimal import Decimal, ROUND_HALF_EVEN
 
-sys.path.append(os.path.join(os.path.dirname(__file__), os.pardir, "coinbridge"))
+HERE = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(HERE, os.pardir))
 
-from coinbridge import Bridge, db
-import config
+from coinbridge import *
 
 class TestBridge(unittest.TestCase):
 
     def setUp(self):
-        config.TESTING = True
-        self.user_id = "4"
-        self.other_user_id = "5"
+        self.user_id = "testaccount1"
+        self.other_user_id = "testaccount2"
         self.coin = "Bitcoin"
-        self.quantum = Decimal("1e-"+str(config.COINS[self.coin.lower()]["decimals"]))
+        self.message = "hello world!"   # used for signature testing
+        self.txfields = ("account", "category", "amount", "time")
+        self.quantum = Decimal("1e-"+str(COINS[self.coin.lower()]["decimals"]))
         self.amount_to_send = Decimal("0.01").quantize(self.quantum,
                                                        rounding=ROUND_HALF_EVEN)
-        self.testnet = True
-        self.address = "n2X1EZS4fAqYivnzQFUatpx4j3URyUWnBP"
-        self.btc_testnet_faucet = "msj42CCGruhRsFrGATiUuh25dtxYtnpbTx"
-        self.btc_mainnet = "1Q1wVsNNiUo68caU7BfyFFQ8fVBqxC2DSc"  # localbitcoins address
-        self.test_address = "msrKBTfUoQHicmRucsfEYQ5Mbk5niVeWii" # "" account address on testnet
-        self.message = "hello world!"
-        self.txfields = ("account", "category", "amount", "time")
-        self.txfee = Decimal(config.COINS[self.coin.lower()]["txfee"])
-        self.bridge = Bridge()
-        self.bridge.rpc_connect(testnet=self.testnet)
+        self.txfee = Decimal(COINS[self.coin.lower()]["txfee"])
+        self.bridge = Bridge(coin=self.coin, testnet=True,
+                             reconnect=False, testing=True)
+        self.assertFalse(self.bridge.reconnect)
+        self.assertEqual(self.bridge.quantum, self.quantum)
+        self.assertTrue(self.bridge.testnet)
+        self.assertEqual(self.bridge.coin, u"bitcoin")
+        self.assertTrue(self.bridge.connected)
+        self.user_address = self.bridge.getaccountaddress(self.user_id)
+        self.other_user_address = self.bridge.getaccountaddress(self.other_user_id)
         self.bridge.walletlock()
-        self.assertIn(self.bridge.coin, config.COINS)
-
-    def _test_payment(self):
-        """Bridge.payment"""
-        # "move" payments: no transaction fee
-        # me -> me
-        old_balance = self.bridge.getbalance(self.user_id)
-        old_accounts = len(self.bridge.listaccounts())
-        with self.bridge.openwallet():
-            result = self.bridge.payment(self.user_id,
-                                         self.address,
-                                         self.amount_to_send)
-        self.assertTrue(result)
-        new_balance = self.bridge.getbalance(self.user_id)
-        new_accounts = len(self.bridge.listaccounts())
-        self.assertEqual(old_accounts, new_accounts)
-        spent = old_balance - new_balance
-        print "Intended to send:", str(self.amount_to_send)
-        print "Actual amount (including fee):", str(spent)
-        print "Fee paid:", str(spent - self.amount_to_send)
-        self.assertEqual(spent, 0)
-        self.assertEqual(old_balance, new_balance)
-        # me -> other account in wallet
-        old_balance = self.bridge.getbalance(self.user_id)
-        old_accounts = len(self.bridge.listaccounts())
-        with self.bridge.openwallet():
-            result = self.bridge.payment(self.user_id,
-                                         self.other_user_id,
-                                         self.amount_to_send)
-        self.assertTrue(result)
-        new_balance = self.bridge.getbalance(self.user_id)
-        new_accounts = len(self.bridge.listaccounts())
-        self.assertEqual(old_accounts, new_accounts)
-        spent = old_balance - new_balance
-        print "Intended to send:", str(self.amount_to_send)
-        print "Actual amount (including fee):", str(spent)
-        print "Fee paid:", str(spent - self.amount_to_send)
-        self.assertEqual(spent, self.amount_to_send)
-        self.assertEqual(old_balance - new_balance, self.amount_to_send)
-        # "sendfrom" payments: transaction fee
-        # me -> outside account
-        old_balance = self.bridge.getbalance(self.user_id)
-        old_accounts = len(self.bridge.listaccounts())
-        with self.bridge.openwallet():
-            txhash = self.bridge.payment(self.user_id,
-                                         self.btc_testnet_faucet,
-                                         self.amount_to_send)
-        self.assertIsNotNone(txhash)
-        self.assertEqual(type(txhash), str)
-        new_balance = self.bridge.getbalance(self.user_id)
-        new_accounts = len(self.bridge.listaccounts())
-        self.assertEqual(old_accounts, new_accounts)
-        spent = old_balance - new_balance
-        print "Intended to send:", str(self.amount_to_send)
-        print "Actual amount (including fee):", str(spent)
-        print "Fee paid:", str(spent - self.amount_to_send)
-        self.assertEqual(spent - self.amount_to_send, self.txfee)
-        self.assertEqual(old_balance - new_balance,
-                         self.amount_to_send + self.txfee)
+        self.btc_testnet_faucet = "msj42CCGruhRsFrGATiUuh25dtxYtnpbTx"
 
     def test_getinfo(self):
-        """Bridge.getinfo"""
-        self.bridge.getinfo()
+        info = self.bridge.getinfo()
+        expected = ("version", "protocolversion", "walletversion", "balance",
+                    "blocks", "timeoffset", "connections", "proxy", "difficulty",
+                    "testnet", "keypoololdest", "keypoolsize", "unlocked_until",
+                    "paytxfee", "relayfee", "errors")
+        for x in expected:
+            self.assertIn(x, info)
+        self.assertGreater(info["version"], 90000)
+        self.assertGreater(info["balance"], 0)
+        self.assertGreater(info["connections"], 0)
+        self.assertGreaterEqual(info["difficulty"], 1.0)
+        self.assertTrue(info["testnet"])
 
     def test_getbalance(self):
-        """Bridge.getbalance"""
-        self.bridge.getbalance(self.user_id)
+        balance = self.bridge.getbalance(self.user_id, as_decimal=True)
+        self.assertIsNotNone(balance)
+        self.assertGreaterEqual(balance, Decimal("0"))
+        self.assertEqual(type(balance), Decimal)
+        balance = self.bridge.getbalance(self.user_id, as_decimal=False)
+        self.assertIsNotNone(balance)
+        self.assertGreaterEqual(balance, Decimal("0"))
+        self.assertEqual(type(balance), unicode)
 
     def test_getaccountaddress(self):
-        """Bridge.getaccountaddress"""
         address = self.bridge.getaccountaddress(self.user_id)
+        self.assertIsNotNone(address)
 
     def test_listtransactions(self):
-        """Bridge.listtransactions"""
         txlist = self.bridge.listtransactions(self.user_id)
         self.assertIsNotNone(txlist)
         self.assertEqual(type(txlist), list)
@@ -125,85 +87,41 @@ class TestBridge(unittest.TestCase):
                 self.assertIn(field, tx)
 
     def test_walletunlock(self):
-        """Bridge.walletunlock"""
         self.bridge.walletunlock()
-        signature = self.bridge.signmessage(self.test_address, self.message)
+        signature = self.bridge.signmessage(self.user_address, self.message)
         self.assertIsNotNone(signature)
         self.assertEqual(type(signature), str)
-        verified = self.bridge.verifymessage(self.test_address,
+        verified = self.bridge.verifymessage(self.user_address,
                                              signature,
                                              self.message)
         self.assertTrue(verified)
 
     def test_walletlock(self):
-        """Bridge.walletlock"""
         self.bridge.walletunlock()
-        signature = self.bridge.signmessage(self.test_address, self.message)
+        signature = self.bridge.signmessage(self.user_address, self.message)
         self.assertIsNotNone(signature)
         self.assertEqual(type(signature), str)
-        verified = self.bridge.verifymessage(self.test_address,
+        verified = self.bridge.verifymessage(self.user_address,
                                              signature,
                                              self.message)
         self.assertTrue(verified)
         self.bridge.walletlock()
-        self.assertRaises(Exception, self.bridge.signmessage(self.test_address,
+        self.assertRaises(Exception, self.bridge.signmessage(self.user_address,
                                                              self.message))
 
-    def sendfrom(self, destination):
-        old_balance = self.bridge.getbalance(self.user_id)
-        with self.bridge.openwallet():
-            txhash = self.bridge.sendfrom(self.user_id,
-                                          destination,
-                                          self.amount_to_send)
-        self.assertIsNotNone(txhash)
-        self.assertEqual(type(txhash), str)
-        new_balance = self.bridge.getbalance(self.user_id)
-        return old_balance, new_balance
-
-    def _test_sendfrom(self):
-        """Bridge.sendfrom"""
-        for destination in (self.address, self.btc_testnet_faucet):
-            old_balance, new_balance = self.sendfrom(destination)
-            spent = old_balance - new_balance
-            print "Intended to send:", str(self.amount_to_send)
-            print "Actual amount (including fee):", str(spent)
-            print "Fee paid:", str(spent - self.amount_to_send)
-            self.assertEqual(spent - self.amount_to_send, self.txfee)
-
-    def move(self, destination):
-        old_balance = self.bridge.getbalance(self.user_id)
-        with self.bridge.openwallet():
-            result = self.bridge.move(self.user_id, destination,
-                                      self.amount_to_send)
-        new_balance = self.bridge.getbalance(self.user_id)
-        return old_balance, new_balance
-
-    def _test_move(self):
-        """Bridge.move"""
-        for destination in (self.other_user_id, self.test_address):
-            old_balance, new_balance = self.move(destination)
-            spent = old_balance - new_balance
-            print "Intended to send:", str(self.amount_to_send)
-            print "Actual amount (including fee):", str(spent)
-            print "Fee paid:", str(spent - self.amount_to_send)
-            self.assertEqual(spent, self.amount_to_send)
-        self.assertRaises(Exception, self.move(destination))
-
     def test_signmessage(self):
-        """Bridge.signmessage"""
         with self.bridge.openwallet():
-            signature = self.bridge.signmessage(self.test_address,
+            signature = self.bridge.signmessage(self.user_address,
                                                 self.message)
         self.assertIsNotNone(signature)
         self.assertEqual(type(signature), str)
 
     def test_verifymessage(self):
-        """Bridge.verifymessage"""
         with self.bridge.openwallet():
-            signature = self.bridge.signmessage(self.test_address,
+            signature = self.bridge.signmessage(self.user_address,
                                                 self.message)
             self.assertIsNotNone(signature)
-            verified = self.bridge.verifymessage(self.test_address,
+            verified = self.bridge.verifymessage(self.user_address,
                                                  signature,
                                                  self.message)
         self.assertTrue(verified)
@@ -213,4 +131,5 @@ class TestBridge(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestBridge)
+    unittest.TextTestRunner(verbosity=2).run(suite)

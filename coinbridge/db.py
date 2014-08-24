@@ -1,14 +1,21 @@
 #!/usr/bin/env python
-"""
-PostgreSQL database setup (using SQLAlchemy)
-"""
+
+import os
+import json
 from sqlalchemy import Column, Integer, String, Numeric, DateTime, Boolean, Table, Text, Float, create_engine, func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.schema import MetaData
-import config
 
 Base = declarative_base()
+
+HERE = os.path.dirname(os.path.realpath(__file__))
+with open(os.path.join(HERE, "data", "postgres.json")) as pgfile:
+    POSTGRES = json.load(pgfile)
+
+urlstring = "postgresql+" + POSTGRES["driver"] + "://" +\
+    POSTGRES["user"] + ":" + POSTGRES["password"] + "@" +\
+    POSTGRES["host"] + "/" + POSTGRES["database"]
 
 class Transaction(Base):
 
@@ -29,9 +36,7 @@ class Transaction(Base):
 
 
 def start_session(get_engine=False):
-    engine = create_engine(config.POSTGRES["urlstring"],
-                           isolation_level="SERIALIZABLE",
-                           echo=False)
+    engine = create_engine(urlstring, echo=False)
     Base.metadata.create_all(engine)
     Base.metadata.bind = engine
     DBSession = sessionmaker(bind=engine)
@@ -46,11 +51,4 @@ def init():
     engine, session = start_session(get_engine=True)
 
 if __name__ == "__main__":
-    engine = create_engine(config.POSTGRES["urlstring"],
-                           isolation_level="SERIALIZABLE",
-                           echo=False)
-    meta = MetaData()
-    meta.reflect(bind=engine)
-    for table in reversed(meta.sorted_tables):
-        engine.execute(table.delete())
-    Base.metadata.create_all(engine)
+    pass
