@@ -13,8 +13,8 @@
 
 trap "exit" INT
 
-echo "Install sed, jq"
-sudo apt-get install sed jq -y &> /dev/null
+echo "Install jq"
+sudo apt-get install jq -y &> /dev/null
 
 sudo service postgresql restart
 
@@ -30,18 +30,20 @@ dropdb coinbridge &> /dev/null
 createdb coinbridge &> /dev/null
 POSTGRES
 
-echo "Setting environment variables"
+echo "Set environment variables"
 echo "export BRIDGE=`pwd`" >> $HOME/.profile
 echo "export PGPASSFILE=$HOME/.pgpass" >> $HOME/.profile
 source $HOME/.profile
 
 echo "Create .pgpass file"
 touch $HOME/.pgpass
-echo "Enter password one more time (for pgpass):"
+touch $BRIDGE/coinbridge/data/pg.cfg
+echo "Enter password one more time:"
 read -s pgpasswd
 echo localhost:5432:coinbridge:coinbridge:$pgpasswd >> $HOME/.pgpass
+echo localhost:5432:coinbridge:coinbridge:$pgpasswd >> $BRIDGE/coinbridge/data/pg.cfg
 chmod 600 $HOME/.pgpass
-sed -i -e "s/overpass/${pgpasswd}/g" $BRIDGE/coinbridge/data/postgres.json &> /dev/null
+chmod 600 $BRIDGE/coinbridge/data/pg.cfg
 
 echo "Add walletnotify flag to bitcoin.conf"
 echo "walletnotify=$BRIDGE/coinbridge/bitcoin-listen %s" >> $HOME/.bitcoin/bitcoin.conf

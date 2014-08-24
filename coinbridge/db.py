@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import os
-import json
 from sqlalchemy import Column, Integer, String, Numeric, DateTime, Boolean, Table, Text, Float, create_engine, func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -9,13 +8,20 @@ from sqlalchemy.schema import MetaData
 
 Base = declarative_base()
 
-HERE = os.path.dirname(os.path.realpath(__file__))
-with open(os.path.join(HERE, "data", "postgres.json")) as pgfile:
-    POSTGRES = json.load(pgfile)
+try:
+    HERE = os.path.dirname(os.path.realpath(__file__))
+    with open(os.path.join(HERE, "data", "pg.cfg")) as pgfile:
+        POSTGRES = pgfile.readline().strip().split(':')
+except:
+    pgpasspath = os.environ.get("PGPASSFILE")
+    with open(pgpasspath) as pgpassfile:
+        for line in pgpassfile:
+            pgpass = line.strip().split(':')
+            if pgpass[2] == "coinbridge":
+                POSTGRES = pgpass
 
-urlstring = "postgresql+" + POSTGRES["driver"] + "://" +\
-    POSTGRES["user"] + ":" + POSTGRES["password"] + "@" +\
-    POSTGRES["host"] + "/" + POSTGRES["database"]
+urlstring = "postgresql+psycopg2://" + POSTGRES[2] + ":" +\
+    POSTGRES[4] + "@" + POSTGRES[0] + "/" + POSTGRES[3]
 
 class Transaction(Base):
 
