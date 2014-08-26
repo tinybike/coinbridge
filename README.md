@@ -44,5 +44,5 @@ A convenience script, `init.sh`, is included that will do some initial configura
 
     from coinbridge import Bridge
     
-    bitcoin_bridge = Bridge()
-    bitcoin_bridge.payment(from_account, to_account, amount)
+    bridge = Bridge()
+    bridge.payment(from_account, to_account, amount)

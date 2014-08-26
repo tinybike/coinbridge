@@ -1,5 +1,5 @@
 #!/bin/bash
-# init.sh: initial configuration for coinbridge
+# init.sh: initial configuration for coinbridge (tested on Ubuntu 12.04)
 #
 # - set up a database in postgresql using settings:
 #     username: coinbridge
@@ -9,7 +9,8 @@
 # - set environment variables
 # - set up bitcoin confirmation listener (walletnotify)
 #
-# note: this script assumes you have bitcoind installed
+# note: this script assumes you have bitcoind installed, and that your
+#       bitcoin data directory is at ~/.bitcoin
 
 trap "exit" INT
 

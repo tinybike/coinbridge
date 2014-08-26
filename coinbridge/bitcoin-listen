@@ -1,5 +1,5 @@
 #!/bin/bash
-# bitcoin-notify: send bitcoin transactions to postgres
+# bitcoin-listen: send bitcoin transactions to postgres
 #
 # Use bitcoind's walletnotify to record transactions in a postgres database.
 # Note: for the latest (v. 9.9+) versions of Bitcoin, replace the bitcoind

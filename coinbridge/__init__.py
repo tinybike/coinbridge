@@ -12,6 +12,7 @@ JSON-RPC functionality.
 
 Usage:
     from coinbridge import Bridge
+    
     bridge = Bridge()
     bridge.payment(from_account, to_account, amount)
 
@@ -341,6 +342,7 @@ class Bridge(object):
 
         Returns:
           str: Base58Check address for this account
+
         """
         address = self.rpc.call("getaccountaddress", user_id)
         self.logger.debug("Your", self.coin, "address is", address)
@@ -357,6 +359,7 @@ class Bridge(object):
 
         Returns:
           str or Decimal: this account's total coin balance
+
         """
         balance = unicode(self.rpc.call("getbalance", user_id))
         self.logger.debug("\"" + user_id + "\"", self.coin, "balance:", balance)
@@ -389,6 +392,7 @@ class Bridge(object):
 
         Returns:
           list [dict]: transactions associated with this user's account
+
         """
         txlist = self.rpc.call("listtransactions", user_id, count, start_at)
         self.logger.debug("Got transaction list for " + str(user_id))
@@ -410,6 +414,7 @@ class Bridge(object):
 
         Returns:
           bool: True if the coins are moved successfully, False otherwise
+
         """
         amount = Decimal(amount).quantize(self.quantum, rounding=ROUND_HALF_EVEN)
         return self.rpc.call("move",
@@ -430,6 +435,7 @@ class Bridge(object):
 
         Returns:
           str: transaction ID
+
         """
         amount = Decimal(amount).quantize(self.quantum, rounding=ROUND_HALF_EVEN)
         txhash = self.rpc.call("sendfrom",
@@ -463,6 +469,7 @@ class Bridge(object):
         Args:
           timeout (int): how many seconds the wallet will remain unlocked.
                          (default=30)
+
         """
         return self.walletpassphrase(int(timeout))
 
@@ -472,6 +479,7 @@ class Bridge(object):
 
         Locking a wallet prohibits certain restricted commands, such as
         spending coins, signing messages, etc.
+
         """
         self.rpc.call("walletlock")
 
@@ -488,6 +496,7 @@ class Bridge(object):
 
         Returns:
           str: ECDSA signature over the message
+
         """
         signature = self.rpc.call("signmessage", address, message)
         self.logger.debug("Signature: %s" % signature)
@@ -505,6 +514,7 @@ class Bridge(object):
 
         Returns:
           bool: True if the address signed the message, False otherwise
+
         """
         verified = self.rpc.call("verifymessage", address, signature, message)
         self.logger.debug("Signature verified: %s" % str(verified))
@@ -517,6 +527,7 @@ class Bridge(object):
 
         Args:
           command (str): command to be sent to the coin daemon
+
         """
         return self.rpc.call(str(command), *args)
 
