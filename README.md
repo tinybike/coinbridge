@@ -10,6 +10,8 @@ Includes a "payment" method which uses free, instant Bitcoin transfers between a
 
 Coinbridge has been tested with Bitcoin, but it should work for any altcoin that shares Bitcoin's RPC command suite (i.e., most of them).  To add a different coin, enter the new coin's information into `coinbridge/data/coins.json`.  For wallet listener functionality, you also need to create a `coinbridge/newcoin-listen` script with `newcoind` in place of `bitcoind`, and point the new coin's `walletnotify` to this script in newcoin's configuration file.
 
+My Bitcoin address is 1BskhsboJofcEnqCqCJjjJia6oovRqvKtq.  Donations are greatly appreciated -- writing open-source software is thirsty work :)
+
 ### Installation
 
     $ pip install coinbridge
