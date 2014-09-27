@@ -38,7 +38,7 @@ from functools import wraps
 import pyjsonrpc
 import db
 
-__title__      = "Coinbridge"
+__title__      = "coinbridge"
 __version__    = "0.1.2"
 __author__     = "Jack Peterson"
 __copyright__  = "Copyright 2014, Dyffy Inc."
