@@ -23,8 +23,7 @@ also need to create a ``coinbridge/newcoin-listen`` script with
 ``newcoind`` in place of ``bitcoind``, and point the new coin's
 ``walletnotify`` to this script in newcoin's configuration file.
 
-My Bitcoin address is 1BskhsboJofcEnqCqCJjjJia6oovRqvKtq. Donations are
-greatly appreciated -- writing open-source software is thirsty work :)
+Donations: 1Mjtmi3G3uTHq12cdxtNrHsQoYEw4Bzwbg
 
 Installation
 ~~~~~~~~~~~~
