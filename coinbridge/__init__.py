@@ -39,12 +39,11 @@ import pyjsonrpc
 import db
 
 __title__      = "coinbridge"
-__version__    = "0.1.2"
+__version__    = "0.1.3"
 __author__     = "Jack Peterson"
-__copyright__  = "Copyright 2014, Dyffy Inc."
 __license__    = "MIT"
 __maintainer__ = "Jack Peterson"
-__email__      = "jack@dyffy.com"
+__email__      = "jack@tinybike.net"
 
 _IS_PYTHON_3 = (platform.version() >= '3')
 identity = lambda x : x

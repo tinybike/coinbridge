@@ -4,6 +4,12 @@ Bitcoin/PostgreSQL bridge
 .. image:: https://travis-ci.org/tensorjack/coinbridge.svg?branch=master
     :target: https://travis-ci.org/tensorjack/coinbridge
 
+.. image:: https://coveralls.io/repos/tensorjack/coinbridge/badge.png
+  :target: https://coveralls.io/r/tensorjack/coinbridge
+
+.. image:: https://badge.fury.io/py/coinbridge.svg
+    :target: http://badge.fury.io/py/coinbridge
+
 Bridge between Bitcoin and PostgreSQL.
 
 Coinbridge connects the Bitcoin daemon (bitcoind) and a local PostgreSQL
@@ -88,3 +94,7 @@ Usage
     bridge = Bridge()
     bridge.payment(from_account, to_account, amount)
 
+.. |Build Status| image:: https://travis-ci.org/tensorjack/coinbridge.svg
+   :target: https://travis-ci.org/tensorjack/coinbridge
+.. |PyPI version| image:: https://badge.fury.io/py/coinbridge.svg
+   :target: http://badge.fury.io/py/coinbridge
