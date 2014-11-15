@@ -2,11 +2,8 @@
 # bitcoin-listen: send bitcoin transactions to postgres
 #
 # Use bitcoind's walletnotify to record transactions in a postgres database.
-# Note: for the latest (v. 9.9+) versions of Bitcoin, replace the bitcoind
+# Note: for the latest (v. 0.9.2+) versions of Bitcoin, replace bitcoind
 # commands with bitcoin-cli (the syntax is otherwise identical).
-#
-# @author Jack Peterson (jack@dyffy.com)
-# @license MIT
 
 # the bitcoin transaction hash is passed in from walletnotify
 txhash=${1}
@@ -20,11 +17,14 @@ confirms=`bitcoind gettransaction $txhash | jq '.["confirmations"]'`
 # if this transaction (identified by its hash) is already in the database,
 # then set the number of confirmations equal to the number of confirmations
 # that bitcoind just looked up for us
-update=`psql -Ucoinbridge -hlocalhost -dcoinbridge -c "UPDATE transactions SET confirmations = $confirms, last_confirmation = now() WHERE txhash = '$txhash'"`
-
+if [ -n "${VAR}" ]; then
+    update=`psql -Ucoinbridge -hlocalhost -dcoinbridge -c "UPDATE transactions SET confirmations = $confirms, last_confirmation = now() WHERE txhash = '$txhash'"`
+else
+    update=`psql -Ucoinbridge -hlocalhost -dcoinbridge -c "UPDATE transactions SET last_confirmation = now() WHERE txhash = '$txhash'"`
+fi
 # if the database tells us that we updated a transaction record successfully,
 # then we're done
-
+#
 # if we didn't update any records in the database, then this is a new
 # transaction, so we need to look up additional details about the transaction
 # and use those to create a new transaction record in the database
