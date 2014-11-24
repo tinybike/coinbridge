@@ -4,9 +4,6 @@ Bitcoin/PostgreSQL bridge
 .. image:: https://travis-ci.org/tensorjack/coinbridge.svg?branch=master
     :target: https://travis-ci.org/tensorjack/coinbridge
 
-.. image:: https://coveralls.io/repos/tensorjack/coinbridge/badge.png
-  :target: https://coveralls.io/r/tensorjack/coinbridge
-
 .. image:: https://badge.fury.io/py/coinbridge.svg
     :target: http://badge.fury.io/py/coinbridge
 
@@ -29,7 +26,7 @@ also need to create a ``coinbridge/newcoin-listen`` script with
 ``newcoind`` in place of ``bitcoind``, and point the new coin's
 ``walletnotify`` to this script in newcoin's configuration file.
 
-Donations: 1Mjtmi3G3uTHq12cdxtNrHsQoYEw4Bzwbg
+Donations: 14sqtQRWuWqa7SCtS1iSjt1FexSxfwnw7G
 
 Installation
 ~~~~~~~~~~~~
