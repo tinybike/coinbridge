@@ -1,8 +1,8 @@
 Bitcoin/PostgreSQL bridge
 -------------------------
 
-.. image:: https://travis-ci.org/tensorjack/coinbridge.svg?branch=master
-    :target: https://travis-ci.org/tensorjack/coinbridge
+.. image:: https://travis-ci.org/tinybike/coinbridge.svg?branch=master
+    :target: https://travis-ci.org/tinybike/coinbridge
 
 .. image:: https://badge.fury.io/py/coinbridge.svg
     :target: http://badge.fury.io/py/coinbridge
@@ -84,7 +84,7 @@ you:
 Usage
 ~~~~~
 
-::
+.. code-block:: python
 
     from coinbridge import Bridge
 
