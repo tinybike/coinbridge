@@ -10,23 +10,24 @@ Bitcoin/PostgreSQL bridge
 Bridge between Bitcoin and PostgreSQL.
 
 Coinbridge connects the Bitcoin daemon (bitcoind) and a local PostgreSQL
-database. Listens for transaction confirmations and automatically
+database. It listens for transaction confirmations and automatically
 updates a transactions table in your database.
 
 Includes a "payment" method which uses free, instant Bitcoin transfers
 between accounts in the same wallet, and standard Bitcoin transactions
 otherwise. Also includes a comprehensive wrapper for
-bitcoind/bitcoin-cli JSON-RPC functionality.
+Bitcoin's JSON-RPC functionality.
 
 Coinbridge has been tested with Bitcoin, but it should work for any
 altcoin that shares Bitcoin's RPC command suite (i.e., most of them). To
 add a different coin, enter the new coin's information into
 ``coinbridge/data/coins.json``. For wallet listener functionality, you
 also need to create a ``coinbridge/newcoin-listen`` script with
-``newcoind`` in place of ``bitcoind``, and point the new coin's
-``walletnotify`` to this script in newcoin's configuration file.
+``newcoin-cli`` (or ``newcoind``) in place of ``bitcoin-cli``, and point
+the new coin's ``walletnotify`` to this script in newcoin's configuration
+file.
 
-Donations: 14sqtQRWuWqa7SCtS1iSjt1FexSxfwnw7G
+Bitcoin: 1CjevDn76Yg5TsEZLkbKy2A6g5hYPE3gAG
 
 Installation
 ~~~~~~~~~~~~
@@ -91,7 +92,7 @@ Usage
     bridge = Bridge()
     bridge.payment(from_account, to_account, amount)
 
-.. |Build Status| image:: https://travis-ci.org/tensorjack/coinbridge.svg
-   :target: https://travis-ci.org/tensorjack/coinbridge
+.. |Build Status| image:: https://travis-ci.org/tinybike/coinbridge.svg
+   :target: https://travis-ci.org/tinybike/coinbridge
 .. |PyPI version| image:: https://badge.fury.io/py/coinbridge.svg
    :target: http://badge.fury.io/py/coinbridge
