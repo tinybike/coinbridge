@@ -39,7 +39,7 @@ import pyjsonrpc
 import db
 
 __title__      = "coinbridge"
-__version__    = "0.1.3"
+__version__    = "0.1.4"
 __author__     = "Jack Peterson"
 __license__    = "MIT"
 __maintainer__ = "Jack Peterson"

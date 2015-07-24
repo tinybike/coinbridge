@@ -6,15 +6,15 @@ except ImportError:
 
 setup(
     name="coinbridge",
-    version="0.1.3",
+    version="0.1.4",
     description="Bitcoin/PostgreSQL bridge",
     author="Jack Peterson",
     author_email="<jack@tinybike.net>",
     maintainer="Jack Peterson",
     maintainer_email="<jack@tinybike.net>",
     license="MIT",
-    url="https://github.com/tensorjack/coinbridge",
-    download_url = "https://github.com/tensorjack/coinbridge/tarball/0.1.3",
+    url="https://github.com/tinybike/coinbridge",
+    download_url = "https://github.com/tinybike/coinbridge/tarball/0.1.4",
     packages=["coinbridge"],
     include_package_data=True,
     package_data={"coinbridge": ["./data/coins.json", "./bitcoin-listen"]},
